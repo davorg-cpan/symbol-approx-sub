@@ -3,7 +3,7 @@ lib/Symbol/Approx/Sub/String/Equal.pm
 lib/Symbol/Approx/Sub/Random.pm
 lib/Symbol/Approx/Sub/Text/Metaphone.pm
 lib/Symbol/Approx/Sub/Text/Soundex.pm
-README.xml
+README
 Sub.pm
 Changes
 COPYING
