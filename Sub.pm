@@ -11,12 +11,15 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.61  2001/06/24 20:04:33  dave
+# Version 2 - Release Candidate 1
+#
 # Revision 1.60  2000/11/17 14:33:14  dave
 # Changed name (again!)
 # Use Devel::Symdump instead of GlobWalker
 #
 # Revision 1.50  2000/11/09 21:29:27  dave
-# Renamed to Symbol::Approx::Sub
+# Renamed to Approx::Sub
 #
 # Revision 1.3  2000/10/30 17:20:07  dave
 # Removed all glob-walking code to GlobWalker.pm.
@@ -38,14 +41,20 @@ use vars qw($VERSION @ISA $AUTOLOAD);
 
 use Devel::Symdump;
 
-$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+#$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+$VERSION = '2.00 alpha';
 
 use Carp;
 
 # List of functions that we _never_ try to match approximately.
-my %_BARRED = ( AUTOLOAD => 1, 
-		DESTROY => 1,
-		END => 1 );
+my @_BARRED = qw(AUTOLOAD BEGIN CHECK INIT DESTROY END);
+my %_BARRED = (1) x @_BARRED;
+
+sub _pkg2file {
+  $_ = shift;
+  s|::|/|g;
+  "$_.pm";
+}
 
 # import is called when another script uses this module.
 # All we do here is overwrite the callers AUTOLOAD subroutine
@@ -53,147 +62,140 @@ my %_BARRED = ( AUTOLOAD => 1,
 sub import  {
   my $class = shift;
 
+  no strict 'refs'; # WARNING: Deep magic here!
+
+  my %param;
   my %CONF;
-  %CONF = @_ if @_;
-  my $default = 'text_soundex';
+  %param = @_ if @_;
 
-  # Subroutines called to handle our built-in matchers.
-  my %funcs = (text_soundex => [\&setup_text_soundex,
-				\&match_text_soundex],
-	       text_metaphone => [\&setup_text_metaphone,
-				  \&match_text_metaphone],
-	       string_approx => [\&setup_string_approx,
-				 \&match_string_approx]);
+  my %defaults = (canon => 'Text::Soundex',
+		  match => 'String::Equal',
+		  choose => 'Random');
 
-  # Work out which matcher subroutine to use. There are four valid options:
-  # 1/ $CONF{match} is empty - use default matcher (&match_text_soundex)
-  # 2/ $CONF{match} is a code ref to an existing subroutine use the 
-  #                 referenced subroutine
-  # 3/ $CONF{match} is a scalar - use one of the predefined matchers
-  # and three invalid ooptions:
-  # 1/ $CONF{match} is a scalar that doesn't match the predefined matchers
-  # 2/ $CONF{match} is some other kind of reference.
-  # 3/ $CONF{match} is a reference to an undefined subroutine
+  # Work out which canonizer(s) to use. The valid options are:
+  # 1/ $param{canon} doesn't exist. Use default canoniser.
+  # 2/ $param{canon} is undef. Use no canonisers.
+  # 3/ $param{canon} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the canoniser.
+  # 4/ $param{canon} is a scalar. This is the name of a canoniser
+  #    module which should be loaded.
+  # 5/ $param{canon} is a reference to an array. Each element of the
+  #    array is one of the previous two options.
 
-  if (exists $CONF{match}) {
-    if (ref $CONF{match} eq 'CODE') {
-      croak 'Invalid matcher passed to Symbol::Approx::Sub' 
-	unless defined &{$CONF{match}};
-    } elsif (ref $CONF{match} eq '') {
-      if (exists $funcs{$CONF{match}}) {
-	$funcs{$CONF{match}}->[0]->();
-	$CONF{match} = $funcs{$CONF{match}}->[1];
+  if (exists $param{canon}) {
+    if (defined $param{canon}) {
+      my $type = ref $param{canon};
+      if ($type eq 'CODE') {
+#	if (defined &{$param{canon}}) {
+	  $CONF{canon} = [$param{canon}];
+#	} else {
+#	  croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+#	}
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{canon}";
+	require(_pkg2file($mod));
+	$CONF{canon} = [\&{"${mod}::canonise"}];
+      } elsif ($type eq 'ARRAY') {
+	foreach (@{$param{canon}}) {
+	  my $type = ref $_;
+	  if ($type eq 'CODE') {
+#	    if (defined &{$_}) {
+	      push @{$CONF{canon}}, $_;
+#	    } else {
+#	      croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+#	    }
+	  } elsif ($type eq '') {
+	    my $mod = "Symbol::Approx::Sub::$_";
+	    require(_pkg2file($mod));
+	    push @{$CONF{canon}}, \&{"${mod}::canonise"};
+	  } else {
+	    croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+	  }
+	}
+      } else {
+	croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+      }
+    } else {
+      $CONF{canon} = [];
+    }
+  } else {
+    my $mod = "Symbol::Approx::Sub::$defaults{canon}";
+    require(_pkg2file($mod));
+    $CONF{canon} = [\&{"${mod}::canonise"}];
+  }
+
+  # Work out which matcher to use. The valid options are:
+  # 1/ $param{match} doesn't exist. Use default matcher.
+  # 2/ $param{match} is undef. Use no matcher.
+  # 3/ $param{match} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the matcher.
+  # 4/ $param{match} is a scalar. This is the name of a matcher
+  #    module which should be loaded.
+
+  if (exists $param{match}) {
+    if (defined $param{match}) {
+      my $type = ref $param{match};
+      if ($type eq 'CODE') {
+#	if (defined &{$param{match}}) {
+	  $CONF{match} = $param{match};
+#	} else {
+#	  croak 'Invalid matcher passed to Symbol::Approx::Sub';
+#	}
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{match}";
+	require(_pkg2file($mod));
+	$CONF{match} = \&{"${mod}::match"};
       } else {
 	croak 'Invalid matcher passed to Symbol::Approx::Sub';
       }
     } else {
-      croak 'Invalid matcher passed to Symbol::Approx::Sub';
+      $CONF{match} = undef;
     }
   } else {
-    $funcs{$default}->[0]->();
-    # Run the setup routine for the predefined matcher.
-    $CONF{match} = $funcs{$default}->[1];
+    my $mod = "Symbol::Approx::Sub::$defaults{match}";
+    require(_pkg2file($mod));
+    $CONF{match} = \&{"${mod}::match"};
   }
 
-  # Work out which chooser to use. $CONF{choose} is either non-existant
-  # or a reference to the subroutine to use.
-  if (exists $CONF{choose}) {
-    if (ref $CONF{choose} ne 'CODE') {
-      croak 'Invalid chooser passed to Symbol::Approx::Sub';
+  # Work out which chooser to use. The valid options are:
+  # 1/ $param{choose} doesn't exist. Use default chooser.
+  # 2/ $param{choose} is undef. Use default chooser.
+  # 3/ $param{choose} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the chooser.
+  # 4/ $param{choose} is a scalar. This is the name of a chooser
+  #    module which should be loaded.
+
+  if (exists $param{choose}) {
+    if (defined $param{choose}) {
+      my $type = ref $param{choose};
+      if ($type eq 'CODE') {
+#	if (defined &{$param{chooser}}) {
+	  $CONF{chooser} = $param{chooser};
+#	} else {
+#	  croak 'Invalid chooser passed to Symbol::Approx::Sub';
+#	}
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{choose}";
+	require(_pkg2file($mod));
+	$CONF{choose} = \&{"${mod}::choose"};
+      } else {
+	croak 'Invalid chooser passed to Symbol::Approx::Sub';
+      }
+    } else {
+      my $mod = "Symbol::Approx::Sub::$defaults{choose}";
+      require(_pkg2file($mod));
+      $CONF{choose} = \&{"4mod::choose"};
     }
-    croak 'Invalid chooser passed to Symbol::Approx::Sub' 
-      unless defined &{$CONF{choose}};
   } else {
-    $CONF{choose} = \&choose;
+    my $mod = "Symbol::Approx::Sub::$defaults{choose}";
+    require(_pkg2file($mod));
+    $CONF{choose} = \&{"${mod}::choose"};
   }
 
   # Now install appropriate AUTOLOAD routine in caller's package
 
-  no strict 'refs'; # WARNING: Deep magic here!
   my $pkg =  caller(0);
   *{"${pkg}::AUTOLOAD"} = make_AUTOLOAD(%CONF);
-}
-
-#
-# The next three subroutines are used to set up the default matchers.
-# Only one of these will ever get called.
-# Notice that we 'require' and 'import' rather than 'use' the modules
-# because 'use' happens at compile time and all of the modules would
-# be loaded into memory.
-sub setup_text_soundex {
-  require Text::Soundex;
-  Text::Soundex->import;
-}
-
-sub setup_text_metaphone {
-  require Text::Metaphone;
-  Text::Metaphone->import;
-}
-
-sub setup_string_approx {
-  require String::Approx;
-  String::Approx->import('amatch');
-}
-
-#
-# The next three subroutines are the predefined matcher routines.
-# Each of them takes as arguments the name of the missing subroutine
-# and a list of all of the subroutines in the current package. The
-# matcher subroutine returns a list of subroutine names which match
-# the missing subroutine's name.
-sub match_text_soundex {
-  my ($wantsub, @subs) = @_;
-  my %cache;
-
-  # For each subroutine name, we work out the equivalent soundex value
-  # and store it in the cache hash. Actually we store a list of
-  # subroutine names against each soundex value.
-  foreach my $sub (@subs) {
-    push @{$cache{soundex($sub)}}, $sub;
-  }
-
-  # Now work out the soundex value for the subroutine that has been called
-  $wantsub = soundex($wantsub);
-  
-  return @{$cache{$wantsub}} if (exists $cache{$wantsub});
-  return;
-}
-
-sub match_text_metaphone {
-  my ($wantsub, @subs) = @_;
-
-  my %cache;
-
-  # For each subroutine name, we work out the equivalent metaphone value
-  # and store it in the cache hash. Actually we store a list of
-  # subroutine names against each metaphone value.
-  foreach my $sub (@subs) {
-    push @{$cache{Metaphone($sub)}}, $sub;
-  }
-
-  # Now work out the metaphone value for the subroutine that has been called
-  $wantsub = Metaphone($wantsub);
-  
-  return @{$cache{$wantsub}} if (exists $cache{$wantsub});
-  return;
-}
-  
-sub match_string_approx {
-  my ($wantsub, @subs) = @_;
-
-  # Luckily, the author of String::Approx makes this
-  # really easy 
-  return amatch($wantsub, @subs);
-}
-
-#
-# The default chooser subroutine.
-# This subroutine is passed a list of subroutines which match the
-# name of the missing subroutine (this list was created by the
-# matcher subroutine. The chooser subroutine must return one of
-# the names from this list.
-sub choose {
-  $_[rand @_];
 }
 
 # Create a subroutine which is called when a given subroutine
@@ -206,26 +208,43 @@ sub make_AUTOLOAD {
   return sub {
     my @c = caller(0);
     my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
-  
+
     # Get a list of all of the subroutines in the current package
     # using the get_subs function from GlobWalker.pm
     # Note that we deliberately omit function names that exist
     # in the %_BARRED hash
+    my (@subs, @orig);
     my $sym = Devel::Symdump->new($pkg);
-    my @subs = grep { ! $_BARRED{$_} } 
-               map { s/${pkg}:://; $_ }
-               grep { defined &{$_} }
-               $sym->functions($pkg);
-  
+    @orig = @subs = grep { ! $_BARRED{$_} } 
+                    map { s/${pkg}:://; $_ }
+                    grep { defined &{$_} } $sym->functions($pkg);
+
+    unshift @subs, $sub;
+
+    # Canonise all of the subroutine names
+    foreach (@{$CONF{canon}}) {
+      @subs = $_->(@subs);
+    }
+
     # Call the subroutine that will look for matches
-    my @matches = $CONF{match}->($sub, @subs);
-  
-    # See if a subroutine (or subroutines) exist with the same soundex value.
-    # If so, pick one using the 'choose' subroutine to call and call it
-    # using magic goto.
-    # If not, die recreating Perl's usual behaviour.
-    if (@matches) {
-      $sub = "${pkg}::" . $CONF{choose}->(@matches);
+    # The matcher returns a list of the _indexes_ that match
+    my @match_ind = $CONF{match}->(@subs);
+
+    shift @subs;
+
+    @subs = @subs[@match_ind];
+    @orig = @orig[@match_ind];
+
+    # If we've got more than one matched subroutine, then call the
+    # chooser to pick one.
+    # Call the matched subroutine using magic goto.
+    # If no match was found, die recreating Perl's usual behaviour.
+    if (@match_ind) {
+      if (@match_ind == 1) {
+        $sub = "${pkg}::" . $orig[0];
+      } else {
+        $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
+      }
       goto &$sub;
     } else {
       die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
@@ -243,7 +262,7 @@ Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
 =head1 SYNOPSIS
 
   use Symbol::Approx::Sub;
-  
+
   sub a {
     # blah...
   }
@@ -260,7 +279,7 @@ Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
 
 This is _really_ stupid. This module allows you to call subroutines by
 _approximate_ names. Why you would ever want to do this is a complete
-mystery to me. It was written as an experiment to see how well I 
+mystery to me. It was written as an experiment to see how well I
 understood typeglobs and AUTOLOADing.
 
 To use it, simply include the line:
@@ -286,14 +305,14 @@ when using Symbol::Approx::Sub.
 You can also use your own subroutine to do the matching. Your subroutine
 should expect to receive the name of the missing subroutine followed by
 a list containing all valid subroutine names and should return a list
-of all matching subroutines. For example:
+containing the _indexes_ of all matching subroutines. For example:
 
   sub my_matcher {
     my $sub_wanted = shift;
 
     my @subs = @_;
 
-    return @subs;
+    return 0 .. $#subs;
 }
 
 This example isn't particularly useful as it says that all subroutine
