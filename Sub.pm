@@ -11,6 +11,12 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.2  2000/10/09 18:52:48  dave
+# Incorporated Robin's patches:
+# * Don't assume we're being called from main
+# * Allow different packages to use different Approx semantics
+# * New tests
+#
 # Revision 1.1  2000/08/24 19:50:18  dave
 # Various tidying.
 #
@@ -24,8 +30,10 @@ $VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
 use Carp;
 
-# Global configuration data
-my %CONF;
+# List of functions that we _never_ try to match approximately.
+my %_BARRED = { AUTOLOAD => 1, 
+		DESTROY => 1,
+		END => 1 };
 
 # import is called when another script uses this module.
 # All we do here is overwrite the callers AUTOLOAD subroutine
@@ -33,10 +41,7 @@ my %CONF;
 sub import  {
   my $class = shift;
 
-  no strict 'refs'; # WARNING: Deep magic here!
-  my $pkg =  caller(0);
-  *{"${pkg}::AUTOLOAD"} = \&AUTOLOAD;
-
+  my %CONF;
   %CONF = @_ if @_;
   my $default = 'text_soundex';
 
@@ -89,6 +94,12 @@ sub import  {
   } else {
     $CONF{choose} = \&choose;
   }
+
+  # Now install appropriate AUTOLOAD routine in caller's package
+
+  no strict 'refs'; # WARNING: Deep magic here!
+  my $pkg =  caller(0);
+  *{"${pkg}::AUTOLOAD"} = make_AUTOLOAD(%CONF);
 }
 
 #
@@ -173,45 +184,45 @@ sub choose {
   $_[rand @_];
 }
 
-# AUTOLOAD is a subroutine which is called when a given subroutine
+# Create a subroutine which is called when a given subroutine
 # name can't be found in the current package. In the import subroutine
 # above we have already arranged that our calling package will use
-# this AUTOLOAD instead of its own.
-sub AUTOLOAD {
-  my @c = caller(0);
-  my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
+# the AUTOLOAD created here instead of its own.
+sub make_AUTOLOAD {
+  my %CONF = @_;
 
-  my @subs;
-
-  no strict 'refs'; # WARNING: Deep magic here!
-
-  # Iterate across the keys of the stash for our calling package.
-  # For each typeglob found, work out if it contains a subroutine
-  # definition. If it does, then work out the equivalent soundex
-  # value and store it in the cache hash. Actually we store a list
-  # of subroutine names against each soundex value.
-  foreach (keys %{"${pkg}::"}) {
-    my $glob = $::{$_};
-    
-    $glob =~ s/^\*${pkg}:://;
-
-    next unless defined &{"*${pkg}::$glob"};
-    next if $glob eq 'AUTOLOAD'; # This would be fun, but Bad
-    push @subs, $glob;
-  }
-
-  # Call the subroutine that will look for matches
-  my @matches = $CONF{match}->($sub, @subs);
-
-  # See if a subroutine (or subroutines) exist with the same soundex value.
-  # If so, pick one using the 'choose' subroutine to call and call it
-  # using magic goto.
-  # If not, die recreating Perl's usual behaviour.
-  if (@matches) {
-    $sub = "${pkg}::" . $CONF{choose}->(@matches);
-    goto &$sub;
-  } else {
-    die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
+  return sub {
+    my @c = caller(0);
+    my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
+  
+    my @subs;
+  
+    no strict 'refs'; # WARNING: Deep magic here!
+  
+    # Iterate across the keys of the stash for our calling package.
+    # For each typeglob found, work out if it contains a subroutine
+    # definition. If it does, then work out the equivalent soundex
+    # value and store it in the cache hash. Actually we store a list
+    # of subroutine names against each soundex value.
+    while (my ($sym_name, $sym_glob) = each %{"${pkg}::"}) {
+      next unless defined &$sym_glob;
+      next if $_BARRED{$sym_name}; # This would be fun, but Bad
+      push @subs, $sym_name;
+    }
+  
+    # Call the subroutine that will look for matches
+    my @matches = $CONF{match}->($sub, @subs);
+  
+    # See if a subroutine (or subroutines) exist with the same soundex value.
+    # If so, pick one using the 'choose' subroutine to call and call it
+    # using magic goto.
+    # If not, die recreating Perl's usual behaviour.
+    if (@matches) {
+      $sub = "${pkg}::" . $CONF{choose}->(@matches);
+      goto &$sub;
+    } else {
+      die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
+    }
   }
 }
 
@@ -327,6 +338,9 @@ and helped massively with the 'fuzzy-configurability'.
 
 Matt Freake helped by pointing out that Perl generally does what you
 mean, not what you think it should do.
+
+Robin Houston spotted some nasty problems and (more importantly) supplied
+patches.
 
 =head1 AUTHOR
 
