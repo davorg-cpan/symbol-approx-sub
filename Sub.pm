@@ -11,6 +11,9 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 2.0  2001/07/24 14:46:14  dave
+# New! Improved! Now with plug-in Architecture!
+#
 # Revision 1.62  2001/07/15 20:47:16  dave
 # Version 2 - RC2
 #
@@ -209,7 +212,7 @@ sub make_AUTOLOAD {
 
     # Transform all of the subroutine names
     foreach (@{$CONF{xform}}) {
-      carp "Invalid transformer passed to Symbol::Approx::Sub\n"
+      croak "Invalid transformer passed to Symbol::Approx::Sub\n"
 	unless defined &$_;
       @subs = $_->(@subs);
     }
@@ -218,7 +221,7 @@ sub make_AUTOLOAD {
     # The matcher returns a list of the _indexes_ that match
     my @match_ind;
     if ($CONF{match}) {
-      carp "Invalid matcher passed to Symbol::Approx::Sub\n"
+      croak "Invalid matcher passed to Symbol::Approx::Sub\n"
 	unless defined &{$CONF{match}};
       @match_ind = $CONF{match}->(@subs);
     } else {
@@ -238,7 +241,7 @@ sub make_AUTOLOAD {
       if (@match_ind == 1) {
         $sub = "${pkg}::" . $orig[0];
       } else {
-	carp "Invalid chooser passed to Symbol::Approx::Sub\n"
+	croak "Invalid chooser passed to Symbol::Approx::Sub\n"
 	  unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
