@@ -1,259 +1,4 @@
-#
-# Symbol::Approx::Sub
-#
 # $Id$
-#
-# Perl module for calling subroutines using approximate names.
-#
-# Copyright (c) 2000, Magnum Solutions Ltd. All rights reserved.
-#
-# This module is free software; you can redistribute it and/or
-# modify it under the same terms as Perl itself.
-#
-# $Log$
-# Revision 2.0  2001/07/24 14:46:14  dave
-# New! Improved! Now with plug-in Architecture!
-#
-# Revision 1.62  2001/07/15 20:47:16  dave
-# Version 2 - RC2
-#
-# Revision 1.61  2001/06/24 20:04:33  dave
-# Version 2 - Release Candidate 1
-#
-# Revision 1.60  2000/11/17 14:33:14  dave
-# Changed name (again!)
-# Use Devel::Symdump instead of GlobWalker
-#
-# Revision 1.50  2000/11/09 21:29:27  dave
-# Renamed to Approx::Sub
-#
-# Revision 1.3  2000/10/30 17:20:07  dave
-# Removed all glob-walking code to GlobWalker.pm.
-#
-# Revision 1.2  2000/10/09 18:52:48  dave
-# Incorporated Robin's patches:
-# * Don't assume we're being called from main
-# * Allow different packages to use different Approx semantics
-# * New tests
-#
-# Revision 1.1  2000/08/24 19:50:18  dave
-# Various tidying.
-#
-#
-package Symbol::Approx::Sub;
-
-use strict;
-use vars qw($VERSION @ISA $AUTOLOAD);
-
-use Devel::Symdump;
-
-$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
-
-use Carp;
-
-# List of functions that we _never_ try to match approximately.
-my @_BARRED = qw(AUTOLOAD BEGIN CHECK INIT DESTROY END);
-my %_BARRED = (1) x @_BARRED;
-
-sub _pkg2file {
-  $_ = shift;
-  s|::|/|g;
-  "$_.pm";
-}
-
-# import is called when another script uses this module.
-# All we do here is overwrite the callers AUTOLOAD subroutine
-# with our own.
-sub import  {
-  my $class = shift;
-
-  no strict 'refs'; # WARNING: Deep magic here!
-
-  my %param;
-  my %CONF;
-  %param = @_ if @_;
-
-  my %defaults = (xform => 'Text::Soundex',
-		  match => 'String::Equal',
-		  choose => 'Random');
-
-  # Work out which transformer(s) to use. The valid options are:
-  # 1/ $param{xform} doesn't exist. Use default transformer.
-  # 2/ $param{xform} is undef. Use no transformers.
-  # 3/ $param{xform} is a reference to a subroutine. Use the 
-  #    referenced subroutine as the transformer.
-  # 4/ $param{xform} is a scalar. This is the name of a transformer
-  #    module which should be loaded.
-  # 5/ $param{xform} is a reference to an array. Each element of the
-  #    array is one of the previous two options.
-
-  if (exists $param{xform}) {
-    if (defined $param{xform}) {
-      my $type = ref $param{xform};
-      if ($type eq 'CODE') {
-	$CONF{xform} = [$param{xform}];
-      } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{xform}";
-	require(_pkg2file($mod));
-	$CONF{xform} = [\&{"${mod}::transform"}];
-      } elsif ($type eq 'ARRAY') {
-	foreach (@{$param{xform}}) {
-	  my $type = ref $_;
-	  if ($type eq 'CODE') {
-	    push @{$CONF{xform}}, $_;
-	  } elsif ($type eq '') {
-	    my $mod = "Symbol::Approx::Sub::$_";
-	    require(_pkg2file($mod));
-	    push @{$CONF{xform}}, \&{"${mod}::transform"};
-	  } else {
-	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
-	  }
-	}
-      } else {
-	croak 'Invalid transformer passed to Symbol::Approx::Sub';
-      }
-    } else {
-      $CONF{xform} = [];
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{xform}";
-    require(_pkg2file($mod));
-    $CONF{xform} = [\&{"${mod}::transform"}];
-  }
-
-  # Work out which matcher to use. The valid options are:
-  # 1/ $param{match} doesn't exist. Use default matcher.
-  # 2/ $param{match} is undef. Use no matcher.
-  # 3/ $param{match} is a reference to a subroutine. Use the 
-  #    referenced subroutine as the matcher.
-  # 4/ $param{match} is a scalar. This is the name of a matcher
-  #    module which should be loaded.
-
-  if (exists $param{match}) {
-    if (defined $param{match}) {
-      my $type = ref $param{match};
-      if ($type eq 'CODE') {
-	$CONF{match} = $param{match};
-      } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{match}";
-	require(_pkg2file($mod));
-	$CONF{match} = \&{"${mod}::match"};
-      } else {
-	croak 'Invalid matcher passed to Symbol::Approx::Sub';
-      }
-    } else {
-      $CONF{match} = undef;
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{match}";
-    require(_pkg2file($mod));
-    $CONF{match} = \&{"${mod}::match"};
-  }
-
-  # Work out which chooser to use. The valid options are:
-  # 1/ $param{choose} doesn't exist. Use default chooser.
-  # 2/ $param{choose} is undef. Use default chooser.
-  # 3/ $param{choose} is a reference to a subroutine. Use the 
-  #    referenced subroutine as the chooser.
-  # 4/ $param{choose} is a scalar. This is the name of a chooser
-  #    module which should be loaded.
-
-  if (exists $param{choose}) {
-    if (defined $param{choose}) {
-      my $type = ref $param{choose};
-      if ($type eq 'CODE') {
-	$CONF{chooser} = $param{chooser};
-      } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{choose}";
-	require(_pkg2file($mod));
-	$CONF{choose} = \&{"${mod}::choose"};
-      } else {
-	croak 'Invalid chooser passed to Symbol::Approx::Sub';
-      }
-    } else {
-      my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-      require(_pkg2file($mod));
-      $CONF{choose} = \&{"4mod::choose"};
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-    require(_pkg2file($mod));
-    $CONF{choose} = \&{"${mod}::choose"};
-  }
-
-  # Now install appropriate AUTOLOAD routine in caller's package
-
-  my $pkg =  caller(0);
-  *{"${pkg}::AUTOLOAD"} = make_AUTOLOAD(%CONF);
-}
-
-# Create a subroutine which is called when a given subroutine
-# name can't be found in the current package. In the import subroutine
-# above we have already arranged that our calling package will use
-# the AUTOLOAD created here instead of its own.
-sub make_AUTOLOAD {
-  my %CONF = @_;
-
-  return sub {
-    my @c = caller(0);
-    my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
-
-    # Get a list of all of the subroutines in the current package
-    # using the get_subs function from GlobWalker.pm
-    # Note that we deliberately omit function names that exist
-    # in the %_BARRED hash
-    my (@subs, @orig);
-    my $sym = Devel::Symdump->new($pkg);
-    @orig = @subs = grep { ! $_BARRED{$_} } 
-                    map { s/${pkg}:://; $_ }
-                    grep { defined &{$_} } $sym->functions($pkg);
-
-    unshift @subs, $sub;
-
-    # Transform all of the subroutine names
-    foreach (@{$CONF{xform}}) {
-      croak "Invalid transformer passed to Symbol::Approx::Sub\n"
-	unless defined &$_;
-      @subs = $_->(@subs);
-    }
-
-    # Call the subroutine that will look for matches
-    # The matcher returns a list of the _indexes_ that match
-    my @match_ind;
-    if ($CONF{match}) {
-      croak "Invalid matcher passed to Symbol::Approx::Sub\n"
-	unless defined &{$CONF{match}};
-      @match_ind = $CONF{match}->(@subs);
-    } else {
-      @match_ind = @subs[1 .. $#subs];
-    }
-
-    shift @subs;
-
-    @subs = @subs[@match_ind];
-    @orig = @orig[@match_ind];
-
-    # If we've got more than one matched subroutine, then call the
-    # chooser to pick one.
-    # Call the matched subroutine using magic goto.
-    # If no match was found, die recreating Perl's usual behaviour.
-    if (@match_ind) {
-      if (@match_ind == 1) {
-        $sub = "${pkg}::" . $orig[0];
-      } else {
-	croak "Invalid chooser passed to Symbol::Approx::Sub\n"
-	  unless defined $CONF{choose};
-        $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
-      }
-      goto &$sub;
-    } else {
-      die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
-    }
-  }
-}
-
-1;
-__END__
 
 =head1 NAME
 
@@ -398,6 +143,233 @@ C<choose>.
 The default transformer, matcher and chooser are available as plug-ins
 called Text::Soundex, String::Equal and Random.
 
+=cut
+
+package Symbol::Approx::Sub;
+
+use strict;
+use vars qw($VERSION @ISA $AUTOLOAD);
+
+use Devel::Symdump;
+
+$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+
+use Carp;
+
+# List of functions that we _never_ try to match approximately.
+my @_BARRED = qw(AUTOLOAD BEGIN CHECK INIT DESTROY END);
+my %_BARRED = (1) x @_BARRED;
+
+sub _pkg2file {
+  $_ = shift;
+  s|::|/|g;
+  "$_.pm";
+}
+
+# import is called when another script uses this module.
+# All we do here is overwrite the callers AUTOLOAD subroutine
+# with our own.
+
+=head1 Subroutines
+
+=head2 import
+
+Called when the module is C<use>d. This function installs our AUTOLOAD
+subroutine into the caller's symbol table.
+
+=cut
+
+sub import  {
+  my $class = shift;
+
+  no strict 'refs'; # WARNING: Deep magic here!
+
+  my %param;
+  my %CONF;
+  %param = @_ if @_;
+
+  my %defaults = (xform => 'Text::Soundex',
+		  match => 'String::Equal',
+		  choose => 'Random');
+
+  # Work out which transformer(s) to use. The valid options are:
+  # 1/ $param{xform} doesn't exist. Use default transformer.
+  # 2/ $param{xform} is undef. Use no transformers.
+  # 3/ $param{xform} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the transformer.
+  # 4/ $param{xform} is a scalar. This is the name of a transformer
+  #    module which should be loaded.
+  # 5/ $param{xform} is a reference to an array. Each element of the
+  #    array is one of the previous two options.
+
+  if (exists $param{xform}) {
+    if (defined $param{xform}) {
+      my $type = ref $param{xform};
+      if ($type eq 'CODE') {
+	$CONF{xform} = [$param{xform}];
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{xform}";
+	require(_pkg2file($mod));
+	$CONF{xform} = [\&{"${mod}::transform"}];
+      } elsif ($type eq 'ARRAY') {
+	foreach (@{$param{xform}}) {
+	  my $type = ref $_;
+	  if ($type eq 'CODE') {
+	    push @{$CONF{xform}}, $_;
+	  } elsif ($type eq '') {
+	    my $mod = "Symbol::Approx::Sub::$_";
+	    require(_pkg2file($mod));
+	    push @{$CONF{xform}}, \&{"${mod}::transform"};
+	  } else {
+	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
+	  }
+	}
+      } else {
+	croak 'Invalid transformer passed to Symbol::Approx::Sub';
+      }
+    } else {
+      $CONF{xform} = [];
+    }
+  } else {
+    my $mod = "Symbol::Approx::Sub::$defaults{xform}";
+    require(_pkg2file($mod));
+    $CONF{xform} = [\&{"${mod}::transform"}];
+  }
+
+  # Work out which matcher to use. The valid options are:
+  # 1/ $param{match} doesn't exist. Use default matcher.
+  # 2/ $param{match} is undef. Use no matcher.
+  # 3/ $param{match} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the matcher.
+  # 4/ $param{match} is a scalar. This is the name of a matcher
+  #    module which should be loaded.
+
+  if (exists $param{match}) {
+    if (defined $param{match}) {
+      my $type = ref $param{match};
+      if ($type eq 'CODE') {
+	$CONF{match} = $param{match};
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{match}";
+	require(_pkg2file($mod));
+	$CONF{match} = \&{"${mod}::match"};
+      } else {
+	croak 'Invalid matcher passed to Symbol::Approx::Sub';
+      }
+    } else {
+      $CONF{match} = undef;
+    }
+  } else {
+    my $mod = "Symbol::Approx::Sub::$defaults{match}";
+    require(_pkg2file($mod));
+    $CONF{match} = \&{"${mod}::match"};
+  }
+
+  # Work out which chooser to use. The valid options are:
+  # 1/ $param{choose} doesn't exist. Use default chooser.
+  # 2/ $param{choose} is undef. Use default chooser.
+  # 3/ $param{choose} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the chooser.
+  # 4/ $param{choose} is a scalar. This is the name of a chooser
+  #    module which should be loaded.
+
+  if (exists $param{choose}) {
+    if (defined $param{choose}) {
+      my $type = ref $param{choose};
+      if ($type eq 'CODE') {
+	$CONF{chooser} = $param{chooser};
+      } elsif ($type eq '') {
+	my $mod = "Symbol::Approx::Sub::$param{choose}";
+	require(_pkg2file($mod));
+	$CONF{choose} = \&{"${mod}::choose"};
+      } else {
+	croak 'Invalid chooser passed to Symbol::Approx::Sub';
+      }
+    } else {
+      my $mod = "Symbol::Approx::Sub::$defaults{choose}";
+      require(_pkg2file($mod));
+      $CONF{choose} = \&{"4mod::choose"};
+    }
+  } else {
+    my $mod = "Symbol::Approx::Sub::$defaults{choose}";
+    require(_pkg2file($mod));
+    $CONF{choose} = \&{"${mod}::choose"};
+  }
+
+  # Now install appropriate AUTOLOAD routine in caller's package
+
+  my $pkg =  caller(0);
+  *{"${pkg}::AUTOLOAD"} = _make_AUTOLOAD(%CONF);
+}
+
+# Create a subroutine which is called when a given subroutine
+# name can't be found in the current package. In the import subroutine
+# above we have already arranged that our calling package will use
+# the AUTOLOAD created here instead of its own.
+sub _make_AUTOLOAD {
+  my %CONF = @_;
+
+  return sub {
+    my @c = caller(0);
+    my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
+
+    # Get a list of all of the subroutines in the current package
+    # using the get_subs function from GlobWalker.pm
+    # Note that we deliberately omit function names that exist
+    # in the %_BARRED hash
+    my (@subs, @orig);
+    my $sym = Devel::Symdump->new($pkg);
+    @orig = @subs = grep { ! $_BARRED{$_} } 
+                    map { s/${pkg}:://; $_ }
+                    grep { defined &{$_} } $sym->functions($pkg);
+
+    unshift @subs, $sub;
+
+    # Transform all of the subroutine names
+    foreach (@{$CONF{xform}}) {
+      croak "Invalid transformer passed to Symbol::Approx::Sub\n"
+	unless defined &$_;
+      @subs = $_->(@subs);
+    }
+
+    # Call the subroutine that will look for matches
+    # The matcher returns a list of the _indexes_ that match
+    my @match_ind;
+    if ($CONF{match}) {
+      croak "Invalid matcher passed to Symbol::Approx::Sub\n"
+	unless defined &{$CONF{match}};
+      @match_ind = $CONF{match}->(@subs);
+    } else {
+      @match_ind = @subs[1 .. $#subs];
+    }
+
+    shift @subs;
+
+    @subs = @subs[@match_ind];
+    @orig = @orig[@match_ind];
+
+    # If we've got more than one matched subroutine, then call the
+    # chooser to pick one.
+    # Call the matched subroutine using magic goto.
+    # If no match was found, die recreating Perl's usual behaviour.
+    if (@match_ind) {
+      if (@match_ind == 1) {
+        $sub = "${pkg}::" . $orig[0];
+      } else {
+	croak "Invalid chooser passed to Symbol::Approx::Sub\n"
+	  unless defined $CONF{choose};
+        $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
+      }
+      goto &$sub;
+    } else {
+      die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
+    }
+  }
+}
+
+1;
+__END__
+
 =head1 CAVEAT
 
 I can't stress too strongly that this will make your code completely 
@@ -431,3 +403,37 @@ With lots of help from Leon Brocard <leon@astray.com>
 perl(1).
 
 =cut
+
+#
+# $Log$
+# Revision 2.1  2004/10/30 20:09:35  dave
+# Improvements to test coverage
+#
+# Revision 2.0  2001/07/24 14:46:14  dave
+# New! Improved! Now with plug-in Architecture!
+#
+# Revision 1.62  2001/07/15 20:47:16  dave
+# Version 2 - RC2
+#
+# Revision 1.61  2001/06/24 20:04:33  dave
+# Version 2 - Release Candidate 1
+#
+# Revision 1.60  2000/11/17 14:33:14  dave
+# Changed name (again!)
+# Use Devel::Symdump instead of GlobWalker
+#
+# Revision 1.50  2000/11/09 21:29:27  dave
+# Renamed to Approx::Sub
+#
+# Revision 1.3  2000/10/30 17:20:07  dave
+# Removed all glob-walking code to GlobWalker.pm.
+#
+# Revision 1.2  2000/10/09 18:52:48  dave
+# Incorporated Robin's patches:
+# * Don't assume we're being called from main
+# * Allow different packages to use different Approx semantics
+# * New tests
+#
+# Revision 1.1  2000/08/24 19:50:18  dave
+# Various tidying.
+#
