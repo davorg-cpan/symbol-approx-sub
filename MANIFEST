@@ -3,11 +3,6 @@ lib/Symbol/Approx/Sub/String/Equal.pm
 lib/Symbol/Approx/Sub/Random.pm
 lib/Symbol/Approx/Sub/Text/Metaphone.pm
 lib/Symbol/Approx/Sub/Text/Soundex.pm
-t/package.t
-t/anon.t
-t/basic.t
-t/packages.t
-t/ref.t
 README.xml
 Sub.pm
 Changes
@@ -15,3 +10,14 @@ COPYING
 Makefile.PL
 MANIFEST
 META.yml                                 Module meta-data (added by MakeMaker)
+t/anon.t
+t/arr_str_xform.t
+t/arr_xform.t
+t/basic.t
+t/code_xform.t
+t/hash_xform.t
+t/packages.t
+t/package.t
+t/ref.t
+t/str_choose.t
+t/str_xform.t
