@@ -1,5 +1,5 @@
 #
-# Approx::Sub
+# Symbol::Approx::Sub
 #
 # $Id$
 #
@@ -11,8 +11,12 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.60  2000/11/17 14:33:14  dave
+# Changed name (again!)
+# Use Devel::Symdump instead of GlobWalker
+#
 # Revision 1.50  2000/11/09 21:29:27  dave
-# Renamed to Approx::Sub
+# Renamed to Symbol::Approx::Sub
 #
 # Revision 1.3  2000/10/30 17:20:07  dave
 # Removed all glob-walking code to GlobWalker.pm.
@@ -27,12 +31,12 @@
 # Various tidying.
 #
 #
-package Approx::Sub;
+package Symbol::Approx::Sub;
 
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
 
-use GlobWalker qw(get_subs);
+use Devel::Symdump;
 
 $VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
@@ -73,17 +77,17 @@ sub import  {
 
   if (exists $CONF{match}) {
     if (ref $CONF{match} eq 'CODE') {
-      croak 'Invalid matcher passed to Approx::Sub' 
+      croak 'Invalid matcher passed to Symbol::Approx::Sub' 
 	unless defined &{$CONF{match}};
     } elsif (ref $CONF{match} eq '') {
       if (exists $funcs{$CONF{match}}) {
 	$funcs{$CONF{match}}->[0]->();
 	$CONF{match} = $funcs{$CONF{match}}->[1];
       } else {
-	croak 'Invalid matcher passed to Approx::Sub';
+	croak 'Invalid matcher passed to Symbol::Approx::Sub';
       }
     } else {
-      croak 'Invalid matcher passed to Approx::Sub';
+      croak 'Invalid matcher passed to Symbol::Approx::Sub';
     }
   } else {
     $funcs{$default}->[0]->();
@@ -95,9 +99,9 @@ sub import  {
   # or a reference to the subroutine to use.
   if (exists $CONF{choose}) {
     if (ref $CONF{choose} ne 'CODE') {
-      croak 'Invalid chooser passed to Approx::Sub';
+      croak 'Invalid chooser passed to Symbol::Approx::Sub';
     }
-    croak 'Invalid chooser passed to Approx::Sub' 
+    croak 'Invalid chooser passed to Symbol::Approx::Sub' 
       unless defined &{$CONF{choose}};
   } else {
     $CONF{choose} = \&choose;
@@ -207,7 +211,11 @@ sub make_AUTOLOAD {
     # using the get_subs function from GlobWalker.pm
     # Note that we deliberately omit function names that exist
     # in the %_BARRED hash
-    my @subs = grep { ! $_BARRED{$_} } get_subs($pkg);
+    my $sym = Devel::Symdump->new($pkg);
+    my @subs = grep { ! $_BARRED{$_} } 
+               map { s/${pkg}:://; $_ }
+               grep { defined &{$_} }
+               $sym->functions($pkg);
   
     # Call the subroutine that will look for matches
     my @matches = $CONF{match}->($sub, @subs);
@@ -230,11 +238,11 @@ __END__
 
 =head1 NAME
 
-Approx::Sub - Perl module for calling subroutines by approximate names!
+Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
 
 =head1 SYNOPSIS
 
-  use Approx::Sub;
+  use Symbol::Approx::Sub;
   
   sub a {
     # blah...
@@ -242,11 +250,11 @@ Approx::Sub - Perl module for calling subroutines by approximate names!
 
   &aa; # executes &a if &aa doesn't exist.
 
-  use Approx::Sub (match => 'text_metaphone');
-  use Approx::Sub (match => 'string_approx');
-  use Approx::Sub (match => 'text_soundex');
-  use Approx::Sub (match => \&my_matcher);
-  use Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
+  use Symbol::Approx::Sub (match => 'text_metaphone');
+  use Symbol::Approx::Sub (match => 'string_approx');
+  use Symbol::Approx::Sub (match => 'text_soundex');
+  use Symbol::Approx::Sub (match => \&my_matcher);
+  use Symbol::Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
 
 =head1 DESCRIPTION
 
@@ -257,7 +265,7 @@ understood typeglobs and AUTOLOADing.
 
 To use it, simply include the line:
 
-  use Approx::Sub;
+  use Symbol::Approx::Sub;
 
 somewhere in your program. Then each time you call a subroutine that doesn't
 exist in the the current package Perl will search for a subroutine with
@@ -267,13 +275,13 @@ value (as defined by Text::Soundex) as the missing subroutine. There are
 two other built-in matching styles using Text::MetaPhone and 
 String::Approx. To use either of these use:
 
-  use Approx::Sub (match => 'text_metaphone');
+  use Symbol::Approx::Sub (match => 'text_metaphone');
 
 or
 
-  use Approx::Sub (match => 'string_approx');
+  use Symbol::Approx::Sub (match => 'string_approx');
 
-when using Approx::Sub.
+when using Symbol::Approx::Sub.
 
 You can also use your own subroutine to do the matching. Your subroutine
 should expect to receive the name of the missing subroutine followed by
@@ -290,9 +298,10 @@ of all matching subroutines. For example:
 
 This example isn't particularly useful as it says that all subroutine
 names are an equally good match. To use this match subroutine in place of 
-the standard ones, give Approx::Sub a reference to the subroutine like this:
+the standard ones, give Symbol::Approx::Sub a reference to the subroutine 
+like this:
 
-  use Approx::Sub (match => \&my_matcher);
+  use Symbol::Approx::Sub (match => \&my_matcher);
 
 Having retrieved a list of matches, we need to select one of them to
 run. The default behaviour is to pick one at random, but again you can
@@ -304,20 +313,20 @@ the subroutine to run. For example:
     return shift;
   }
 
-which will return the first subroutine name in the list. To make Approx::Sub
-use this subroutine in place of the standard one, give Approx::Sub a
-reference to the subroutine like this:
+which will return the first subroutine name in the list. To make 
+Symbol::Approx::Sub use this subroutine in place of the standard one, 
+give Symbol::Approx::Sub a reference to the subroutine like this:
 
-  use Approx::Sub (choose => \&my_chooser);
+  use Symbol::Approx::Sub (choose => \&my_chooser);
 
 You can, of course, define both a matcher and a chooser like this:
 
-  use Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
+  use Symbol::Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
 
 or use you own chooser in conjunction with a standard matcher like this:
 
-  use Approx::Sub (match => 'text_metaphone',
-                   choose => \&my_chooser);
+  use Symbol::Approx::Sub (match => 'text_metaphone',
+                           choose => \&my_chooser);
 
 =head1 CAVEAT
 
