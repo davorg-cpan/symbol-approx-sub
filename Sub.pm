@@ -1,12 +1,19 @@
 #
 # Sub::Approx
 #
+# $Id$
+#
 # Perl module for calling subroutines using approximate names.
 #
 # Copyright (c) 2000, Magnum Solutions Ltd. All rights reserved.
 #
 # This module is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
+#
+# $Log$
+# Revision 1.1  2000/08/24 19:50:18  dave
+# Various tidying.
+#
 #
 package Sub::Approx;
 
@@ -229,7 +236,7 @@ Sub::Approx - Perl module for calling subroutines by approximate names!
   use Sub::Approx (match => 'string_approx');
   use Sub::Approx (match => 'text_soundex');
   use Sub::Approx (match => \&my_matcher);
-  use Sub::Approx (match => \&my_matcher, \&my_chooser);
+  use Sub::Approx (match => \&my_matcher, choose => \&my_chooser);
 
 =head1 DESCRIPTION
 
