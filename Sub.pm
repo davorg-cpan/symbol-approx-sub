@@ -11,6 +11,9 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.62  2001/07/15 20:47:16  dave
+# Version 2 - RC2
+#
 # Revision 1.61  2001/06/24 20:04:33  dave
 # Version 2 - Release Candidate 1
 #
@@ -41,8 +44,7 @@ use vars qw($VERSION @ISA $AUTOLOAD);
 
 use Devel::Symdump;
 
-#$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
-$VERSION = '2.00 alpha';
+$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
 use Carp;
 
@@ -68,60 +70,52 @@ sub import  {
   my %CONF;
   %param = @_ if @_;
 
-  my %defaults = (canon => 'Text::Soundex',
+  my %defaults = (xform => 'Text::Soundex',
 		  match => 'String::Equal',
 		  choose => 'Random');
 
-  # Work out which canonizer(s) to use. The valid options are:
-  # 1/ $param{canon} doesn't exist. Use default canoniser.
-  # 2/ $param{canon} is undef. Use no canonisers.
-  # 3/ $param{canon} is a reference to a subroutine. Use the 
-  #    referenced subroutine as the canoniser.
-  # 4/ $param{canon} is a scalar. This is the name of a canoniser
+  # Work out which transformer(s) to use. The valid options are:
+  # 1/ $param{xform} doesn't exist. Use default transformer.
+  # 2/ $param{xform} is undef. Use no transformers.
+  # 3/ $param{xform} is a reference to a subroutine. Use the 
+  #    referenced subroutine as the transformer.
+  # 4/ $param{xform} is a scalar. This is the name of a transformer
   #    module which should be loaded.
-  # 5/ $param{canon} is a reference to an array. Each element of the
+  # 5/ $param{xform} is a reference to an array. Each element of the
   #    array is one of the previous two options.
 
-  if (exists $param{canon}) {
-    if (defined $param{canon}) {
-      my $type = ref $param{canon};
+  if (exists $param{xform}) {
+    if (defined $param{xform}) {
+      my $type = ref $param{xform};
       if ($type eq 'CODE') {
-#	if (defined &{$param{canon}}) {
-	  $CONF{canon} = [$param{canon}];
-#	} else {
-#	  croak 'Invalid canoniser passed to Symbol::Approx::Sub';
-#	}
+	$CONF{xform} = [$param{xform}];
       } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{canon}";
+	my $mod = "Symbol::Approx::Sub::$param{xform}";
 	require(_pkg2file($mod));
-	$CONF{canon} = [\&{"${mod}::canonise"}];
+	$CONF{xform} = [\&{"${mod}::transform"}];
       } elsif ($type eq 'ARRAY') {
-	foreach (@{$param{canon}}) {
+	foreach (@{$param{xform}}) {
 	  my $type = ref $_;
 	  if ($type eq 'CODE') {
-#	    if (defined &{$_}) {
-	      push @{$CONF{canon}}, $_;
-#	    } else {
-#	      croak 'Invalid canoniser passed to Symbol::Approx::Sub';
-#	    }
+	    push @{$CONF{xform}}, $_;
 	  } elsif ($type eq '') {
 	    my $mod = "Symbol::Approx::Sub::$_";
 	    require(_pkg2file($mod));
-	    push @{$CONF{canon}}, \&{"${mod}::canonise"};
+	    push @{$CONF{xform}}, \&{"${mod}::transform"};
 	  } else {
-	    croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
 	  }
 	}
       } else {
-	croak 'Invalid canoniser passed to Symbol::Approx::Sub';
+	croak 'Invalid transformer passed to Symbol::Approx::Sub';
       }
     } else {
-      $CONF{canon} = [];
+      $CONF{xform} = [];
     }
   } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{canon}";
+    my $mod = "Symbol::Approx::Sub::$defaults{xform}";
     require(_pkg2file($mod));
-    $CONF{canon} = [\&{"${mod}::canonise"}];
+    $CONF{xform} = [\&{"${mod}::transform"}];
   }
 
   # Work out which matcher to use. The valid options are:
@@ -136,11 +130,7 @@ sub import  {
     if (defined $param{match}) {
       my $type = ref $param{match};
       if ($type eq 'CODE') {
-#	if (defined &{$param{match}}) {
-	  $CONF{match} = $param{match};
-#	} else {
-#	  croak 'Invalid matcher passed to Symbol::Approx::Sub';
-#	}
+	$CONF{match} = $param{match};
       } elsif ($type eq '') {
 	my $mod = "Symbol::Approx::Sub::$param{match}";
 	require(_pkg2file($mod));
@@ -169,11 +159,7 @@ sub import  {
     if (defined $param{choose}) {
       my $type = ref $param{choose};
       if ($type eq 'CODE') {
-#	if (defined &{$param{chooser}}) {
-	  $CONF{chooser} = $param{chooser};
-#	} else {
-#	  croak 'Invalid chooser passed to Symbol::Approx::Sub';
-#	}
+	$CONF{chooser} = $param{chooser};
       } elsif ($type eq '') {
 	my $mod = "Symbol::Approx::Sub::$param{choose}";
 	require(_pkg2file($mod));
@@ -221,14 +207,23 @@ sub make_AUTOLOAD {
 
     unshift @subs, $sub;
 
-    # Canonise all of the subroutine names
-    foreach (@{$CONF{canon}}) {
+    # Transform all of the subroutine names
+    foreach (@{$CONF{xform}}) {
+      carp "Invalid transformer passed to Symbol::Approx::Sub\n"
+	unless defined &$_;
       @subs = $_->(@subs);
     }
 
     # Call the subroutine that will look for matches
     # The matcher returns a list of the _indexes_ that match
-    my @match_ind = $CONF{match}->(@subs);
+    my @match_ind;
+    if ($CONF{match}) {
+      carp "Invalid matcher passed to Symbol::Approx::Sub\n"
+	unless defined &{$CONF{match}};
+      @match_ind = $CONF{match}->(@subs);
+    } else {
+      @match_ind = @subs[1 .. $#subs];
+    }
 
     shift @subs;
 
@@ -243,6 +238,8 @@ sub make_AUTOLOAD {
       if (@match_ind == 1) {
         $sub = "${pkg}::" . $orig[0];
       } else {
+	carp "Invalid chooser passed to Symbol::Approx::Sub\n"
+	  unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
       goto &$sub;
@@ -269,11 +266,16 @@ Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
 
   &aa; # executes &a if &aa doesn't exist.
 
-  use Symbol::Approx::Sub (match => 'text_metaphone');
-  use Symbol::Approx::Sub (match => 'string_approx');
-  use Symbol::Approx::Sub (match => 'text_soundex');
-  use Symbol::Approx::Sub (match => \&my_matcher);
-  use Symbol::Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
+  use Symbol::Approx::Sub (xform => 'Text::Metaphone');
+  use Symbol::Approx::Sub (xform => undef,
+			   match => 'String::Approx');
+  use Symbol::Approx::Sub (xform => 'Text::Soundex');
+  use Symbol::Approx::Sub (xform => \&my_transform);
+  use Symbol::Approx::Sub (xform => [\&my_transform, 'Text::Soundex']);
+  use Symbol::Approx::Sub (xform => \&my_transform,
+			   match => \&my_matcher,
+			   choose => \&my_chooser);
+
 
 =head1 DESCRIPTION
 
@@ -294,58 +296,104 @@ value (as defined by Text::Soundex) as the missing subroutine. There are
 two other built-in matching styles using Text::MetaPhone and 
 String::Approx. To use either of these use:
 
-  use Symbol::Approx::Sub (match => 'text_metaphone');
+  use Symbol::Approx::Sub (xform => 'text_metaphone');
 
 or
 
-  use Symbol::Approx::Sub (match => 'string_approx');
+  use Symbol::Approx::Sub (xfrom => undef,
+                           match => 'string_approx');
 
 when using Symbol::Approx::Sub.
 
-You can also use your own subroutine to do the matching. Your subroutine
-should expect to receive the name of the missing subroutine followed by
-a list containing all valid subroutine names and should return a list
-containing the _indexes_ of all matching subroutines. For example:
+=head2 Configuring The Fuzzy Matching
 
-  sub my_matcher {
-    my $sub_wanted = shift;
+There are three phases to the matching process. They are:
 
-    my @subs = @_;
+=over 4
 
-    return 0 .. $#subs;
-}
+=item *
 
-This example isn't particularly useful as it says that all subroutine
-names are an equally good match. To use this match subroutine in place of 
-the standard ones, give Symbol::Approx::Sub a reference to the subroutine 
-like this:
+B<transform> - a transform subroutine applies some kind of transformation
+to the subroutine names. For example the default transformer applies the
+Soundex algorithm to each of the subroutine names. Other obvious 
+tranformations would be to remove all the underscores or to change the
+names to lower case.
 
-  use Symbol::Approx::Sub (match => \&my_matcher);
+A transform subroutine should simply apply its transformation to each
+item in its parameter list and return the transformed list. For example, a
+transformer that removed underscores from its parameters would look like
+this:
 
-Having retrieved a list of matches, we need to select one of them to
-run. The default behaviour is to pick one at random, but again you can
-configure this behaviour by writing a subroutine. This subroutine will be
-passed a list of matching subroutine names and should return the name of
-the subroutine to run. For example:
-
-  sub my_chooser {
-    return shift;
+  sub tranformer {
+    map { s/_//g; $_ } @_;
   }
 
-which will return the first subroutine name in the list. To make 
-Symbol::Approx::Sub use this subroutine in place of the standard one, 
-give Symbol::Approx::Sub a reference to the subroutine like this:
+Transform subroutines can be chained together.
 
-  use Symbol::Approx::Sub (choose => \&my_chooser);
+=item *
 
-You can, of course, define both a matcher and a chooser like this:
+B<match> - a match subroutine takes a target string and a list of other
+strings. It matches each of the strings against the target and determines
+whether or not it 'matches' according to some criteria. For example the
+default matcher simply checks to see if the strings are equal.
 
-  use Symbol::Approx::Sub (match => \&my_matcher, choose => \&my_chooser);
+A match subroutine is passed the target string as its first parameter,
+followed by the list of potential matches. For each string that matches,
+the matcher should return the index number from the input list. For example, 
+the default matcher is implemented like this:
 
-or use you own chooser in conjunction with a standard matcher like this:
+  sub matcher {
+    my ($sub, @subs) = @_;
+    my (@ret);
 
-  use Symbol::Approx::Sub (match => 'text_metaphone',
-                           choose => \&my_chooser);
+    foreach (0 .. $#subs) {
+      push @ret, $_ if $sub eq $subs[$_];
+    }
+
+    @ret;
+  }
+
+=item *
+
+B<choose> - a chooser subroutine takes a list of matches and chooses exactly
+one item from the list. The default matcher chooses one item at random.
+
+A chooser subroutine is passed a list of matches and must simply return one
+index number from that list. For example, the default chooser is implemented 
+like this:
+
+  sub chooser {
+    rand @_;
+  }
+
+=back
+
+You can override any of these behaviours by writing your own transformer,
+matcher or chooser. You can either define the subroutine in your own
+script or you can put the subroutine in a separate module which 
+Symbol::Approx::Sub can then use as a I<plug-in>. See below for more details
+on plug-ins.
+
+To use your own function, simply pass a reference to the subroutine to the
+C<use Symbol::Approx::Sub> line like this:
+
+  use Symbol::Approx::Sub(xfrom => \&my_transform,
+                          match => \&my_matcher,
+                          choose => \&my_chooser);
+
+A plug-in is simply a module that lives in the Symbol::Approx::Sub 
+namespace. For example, if you had a line of code like this:
+
+  use Symbol::Approx::Sub(xfrom => 'MyTransform');
+
+then Symbol::Approx::Sub will try to load a module called
+Symbol::Approx::Sub::MyTranform and it will use a function from within that
+module called C<tranformer> as the transform function. Similarly, the 
+matcher function is called C<match> and the chooser function is called
+C<choose>.
+
+The default transformer, matcher and chooser are available as plug-ins
+called Text::Soundex, String::Equal and Random.
 
 =head1 CAVEAT
 
