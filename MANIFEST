@@ -1,0 +1,17 @@
+lib/Symbol/Approx/Sub/String/Approx.pm
+lib/Symbol/Approx/Sub/String/Equal.pm
+lib/Symbol/Approx/Sub/Random.pm
+lib/Symbol/Approx/Sub/Text/Metaphone.pm
+lib/Symbol/Approx/Sub/Text/Soundex.pm
+t/package.t
+t/anon.t
+t/basic.t
+t/packages.t
+t/ref.t
+README.xml
+Sub.pm
+Changes
+COPYING
+Makefile.PL
+MANIFEST
+META.yml                                 Module meta-data (added by MakeMaker)
