@@ -11,6 +11,9 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.3  2000/10/30 17:20:07  dave
+# Removed all glob-walking code to GlobWalker.pm.
+#
 # Revision 1.2  2000/10/09 18:52:48  dave
 # Incorporated Robin's patches:
 # * Don't assume we're being called from main
@@ -25,6 +28,8 @@ package Sub::Approx;
 
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
+
+use GlobWalker qw(get_subs);
 
 $VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
@@ -195,20 +200,11 @@ sub make_AUTOLOAD {
     my @c = caller(0);
     my ($pkg, $sub) = $AUTOLOAD =~ /^(.*)::(.*)$/;
   
-    my @subs;
-  
-    no strict 'refs'; # WARNING: Deep magic here!
-  
-    # Iterate across the keys of the stash for our calling package.
-    # For each typeglob found, work out if it contains a subroutine
-    # definition. If it does, then work out the equivalent soundex
-    # value and store it in the cache hash. Actually we store a list
-    # of subroutine names against each soundex value.
-    while (my ($sym_name, $sym_glob) = each %{"${pkg}::"}) {
-      next unless defined &$sym_glob;
-      next if $_BARRED{$sym_name}; # This would be fun, but Bad
-      push @subs, $sym_name;
-    }
+    # Get a list of all of the subroutines in the current package
+    # using the get_subs function from GlobWalker.pm
+    # Note that we deliberately omit function names that exist
+    # in the %_BARRED hash
+    my @subs = grep { ! $_BARRED{$_} } get_subs($pkg);
   
     # Call the subroutine that will look for matches
     my @matches = $CONF{match}->($sub, @subs);
