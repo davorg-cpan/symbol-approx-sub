@@ -403,9 +403,12 @@ With lots of help from Leon Brocard <leon@astray.com>
 perl(1).
 
 =cut
-
+ 
 #
 # $Log$
+# Revision 2.2  2005/10/22 17:56:13  dave
+# Added test files
+#
 # Revision 2.1  2004/10/30 20:09:35  dave
 # Improvements to test coverage
 #
