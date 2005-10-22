@@ -3,7 +3,7 @@
 
 use Test::Simple tests => 1;
 
-use Symbol::Approx::Sub (xform => sub { map { s/\W//g } @_ });
+use Symbol::Approx::Sub (xform => sub { map { s/[^A-Za-z]//g; $_ } @_ });
 
 sub a_a { 'aa' }
 
