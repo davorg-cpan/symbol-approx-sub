@@ -11,6 +11,9 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.2  2005/10/22 17:56:22  dave
+# Added docs.
+#
 # Revision 1.1  2002/03/29 17:55:40  dave
 # Support modules
 #
@@ -27,6 +30,23 @@ $VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
 use Carp;
 use Text::Soundex;
+
+=head1 NAME
+
+Symbol::Approx::Sub::Text::Soundex
+
+=head1 SYNOPSIS
+
+See L<Symbol::Approx::Sub>
+
+=head1 METHODS
+
+=head2 transform
+
+Returns the array it is passed with all values converted to their soundex
+equivalent.
+
+=cut
 
 sub transform {
   map { soundex($_) } @_;

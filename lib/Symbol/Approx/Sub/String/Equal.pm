@@ -11,6 +11,9 @@
 # modify it under the same terms as Perl itself.
 #
 # $Log$
+# Revision 1.2  2005/10/22 17:56:22  dave
+# Added docs.
+#
 # Revision 1.1  2002/03/29 17:55:31  dave
 # Support modules
 #
@@ -26,6 +29,23 @@ use vars qw($VERSION @ISA $AUTOLOAD);
 $VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
 
 use Carp;
+
+=head1 NAME
+
+Symbol::Approx::Sub::String::Equal
+
+=head1 SYNOPSIS
+
+See L<Symbol::Approx::Sub>
+
+=head1 METHODS
+
+=head2 match
+
+Passed a value and a list of values. Returns the values from the list
+which equal (by string comparison) the initial value.
+
+=cut
 
 sub match {
   my ($sub, @subs) = @_;
