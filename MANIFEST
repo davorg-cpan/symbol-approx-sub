@@ -4,7 +4,7 @@ lib/Symbol/Approx/Sub/Random.pm
 lib/Symbol/Approx/Sub/Text/Metaphone.pm
 lib/Symbol/Approx/Sub/Text/Soundex.pm
 README
-Sub.pm
+lib/Symbol/Approx/Sub.pm
 Changes
 COPYING
 Makefile.PL
