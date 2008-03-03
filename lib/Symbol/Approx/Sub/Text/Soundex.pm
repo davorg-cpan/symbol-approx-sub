@@ -26,7 +26,7 @@ package Symbol::Approx::Sub::Text::Soundex;
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
 
-$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%2d", '$Revision$ ' =~ /(\d+)/;
 
 use Carp;
 use Text::Soundex;

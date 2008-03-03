@@ -26,7 +26,7 @@ package Symbol::Approx::Sub::String::Equal;
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
 
-$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d", '$Revision$ ' =~ /(\d+)/;
 
 use Carp;
 

@@ -152,7 +152,7 @@ use vars qw($VERSION @ISA $AUTOLOAD);
 
 use Devel::Symdump;
 
-$VERSION = sprintf "%d.%02d", '$Revision$ ' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d", '$Revision$ ' =~ /(\d+)/;
 
 use Carp;
 
