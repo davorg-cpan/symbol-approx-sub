@@ -147,8 +147,11 @@ called Text::Soundex, String::Equal and Random.
 
 package Symbol::Approx::Sub;
 
+require 5.006_000;
 use strict;
-use vars qw($VERSION @ISA $AUTOLOAD);
+use warnings;
+
+our ($VERSION, @ISA, $AUTOLOAD);
 
 use Devel::Symdump;
 

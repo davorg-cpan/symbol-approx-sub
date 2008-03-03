@@ -23,8 +23,11 @@
 #
 package Symbol::Approx::Sub::Text::Soundex;
 
+require 5.006_000;
 use strict;
-use vars qw($VERSION @ISA $AUTOLOAD);
+use warnings;
+
+our ($VERSION, @ISA, $AUTOLOAD);
 
 $VERSION = sprintf "%2d", '$Revision$ ' =~ /(\d+)/;
 

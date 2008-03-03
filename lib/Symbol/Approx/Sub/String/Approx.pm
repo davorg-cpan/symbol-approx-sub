@@ -23,8 +23,11 @@
 #
 package Symbol::Approx::Sub::String::Approx;
 
+require 5.006_000;
+use warnings;
 use strict;
-use vars qw($VERSION @ISA $AUTOLOAD);
+
+our ($VERSION, @ISA, $AUTOLOAD);
 
 $VERSION = sprintf "%d", '$Revision$ ' =~ /(\d+)/;
 
