@@ -401,45 +401,15 @@ Dave Cross <dave@dave.org.uk>
 
 With lots of help from Leon Brocard <leon@astray.com>
 
+=head1 LICENSE
+
+Copyright (C) 2000-2008, Magnum Solutions Ltd.  All Rights Reserved.
+
+This script is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. 
+
 =head1 SEE ALSO
 
 perl(1).
 
 =cut
- 
-#
-# $Log$
-# Revision 2.2  2005/10/22 17:56:13  dave
-# Added test files
-#
-# Revision 2.1  2004/10/30 20:09:35  dave
-# Improvements to test coverage
-#
-# Revision 2.0  2001/07/24 14:46:14  dave
-# New! Improved! Now with plug-in Architecture!
-#
-# Revision 1.62  2001/07/15 20:47:16  dave
-# Version 2 - RC2
-#
-# Revision 1.61  2001/06/24 20:04:33  dave
-# Version 2 - Release Candidate 1
-#
-# Revision 1.60  2000/11/17 14:33:14  dave
-# Changed name (again!)
-# Use Devel::Symdump instead of GlobWalker
-#
-# Revision 1.50  2000/11/09 21:29:27  dave
-# Renamed to Approx::Sub
-#
-# Revision 1.3  2000/10/30 17:20:07  dave
-# Removed all glob-walking code to GlobWalker.pm.
-#
-# Revision 1.2  2000/10/09 18:52:48  dave
-# Incorporated Robin's patches:
-# * Don't assume we're being called from main
-# * Allow different packages to use different Approx semantics
-# * New tests
-#
-# Revision 1.1  2000/08/24 19:50:18  dave
-# Various tidying.
-#
