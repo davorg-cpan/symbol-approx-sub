@@ -1,4 +1,4 @@
-use Test::Simple tests => 1;
+use Test::More tests => 1;
 
 use Symbol::Approx::Sub (xform => [ sub { map { s/[^a-z]//ig; $_ } @_ },
                                     sub { map { lc } @_ } ]);
