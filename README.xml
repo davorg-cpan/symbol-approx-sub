@@ -42,7 +42,7 @@ the Sub.pm file into this directory should also do the trick.</TEXT>
 <SUBSECTION>
 <HEAD>PREREQUISITES</HEAD>
 
-<TEXT>As of version 1.03, Symbol::Approx::Sub uses Devel::Symdump to do 
+<TEXT>As of version 1.03, Symbol::Approx::Sub uses Devel::Symdump to do
 all of the clever glob-walking stuff, so you'll need to get that from
 CPAN and install it before installing Symbol::Approx::Sub.</TEXT>
 </SUBSECTION>

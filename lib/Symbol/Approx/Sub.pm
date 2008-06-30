@@ -36,20 +36,20 @@ To use it, simply include the line:
 
   use Symbol::Approx::Sub;
 
-somewhere in your program. Then each time you call a subroutine that doesn't
-exist in the the current package Perl will search for a subroutine with
+somewhere in your program. Then, each time you call a subroutine that doesn't
+exist in the the current package, Perl will search for a subroutine with
 approximately the same name. The meaning of 'approximately the same' is
 configurable. The default is to find subroutines with the same Soundex
 value (as defined by Text::Soundex) as the missing subroutine. There are
-two other built-in matching styles using Text::MetaPhone and 
+two other built-in matching styles using Text::Metaphone and
 String::Approx. To use either of these use:
 
-  use Symbol::Approx::Sub (xform => 'text_metaphone');
+  use Symbol::Approx::Sub (xform => 'Text::Metaphone');
 
 or
 
-  use Symbol::Approx::Sub (xfrom => undef,
-                           match => 'string_approx');
+  use Symbol::Approx::Sub (xform => undef,
+                           match => 'String::Approx');
 
 when using Symbol::Approx::Sub.
 
@@ -82,7 +82,7 @@ Transform subroutines can be chained together.
 
 B<match> - a match subroutine takes a target string and a list of other
 strings. It matches each of the strings against the target and determines
-whether or not it 'matches' according to some criteria. For example the
+whether or not it 'matches' according to some criteria. For example, the
 default matcher simply checks to see if the strings are equal.
 
 A match subroutine is passed the target string as its first parameter,
@@ -125,18 +125,18 @@ on plug-ins.
 To use your own function, simply pass a reference to the subroutine to the
 C<use Symbol::Approx::Sub> line like this:
 
-  use Symbol::Approx::Sub(xfrom => \&my_transform,
+  use Symbol::Approx::Sub(xform => \&my_transform,
                           match => \&my_matcher,
                           choose => \&my_chooser);
 
-A plug-in is simply a module that lives in the Symbol::Approx::Sub 
+A plug-in is simply a module that lives in the Symbol::Approx::Sub
 namespace. For example, if you had a line of code like this:
 
-  use Symbol::Approx::Sub(xfrom => 'MyTransform');
+  use Symbol::Approx::Sub(xform => 'MyTransform');
 
 then Symbol::Approx::Sub will try to load a module called
-Symbol::Approx::Sub::MyTranform and it will use a function from within that
-module called C<tranformer> as the transform function. Similarly, the 
+Symbol::Approx::Sub::MyTransform and it will use a function from within that
+module called C<transform> as the transform function. Similarly, the
 matcher function is called C<match> and the chooser function is called
 C<choose>.
 
@@ -170,7 +170,7 @@ sub _pkg2file {
 }
 
 # import is called when another script uses this module.
-# All we do here is overwrite the callers AUTOLOAD subroutine
+# All we do here is overwrite the caller's AUTOLOAD subroutine
 # with our own.
 
 =head1 Subroutines
@@ -307,7 +307,7 @@ sub import  {
 
 # Create a subroutine which is called when a given subroutine
 # name can't be found in the current package. In the import subroutine
-# above we have already arranged that our calling package will use
+# above, we have already arranged that our calling package will use
 # the AUTOLOAD created here instead of its own.
 sub _make_AUTOLOAD {
   my %CONF = @_;
@@ -382,8 +382,8 @@ doing something very stupid.
 =head1 ACKNOWLEDGEMENTS
 
 This idea came to me whilst sitting in Mark-Jason Dominus' "Tricks of
-the Wizards" tutorial. In order to protect his reputation I should
-probably point out that just as the idea was forming in my head he
+the Wizards" tutorial. In order to protect his reputation, I should
+probably point out that just as the idea was forming in my head, he
 clearly said that this kind of thing was a very bad idea.
 
 Leon Brocard is clearly as mad as me as he pointed out some important bugs
