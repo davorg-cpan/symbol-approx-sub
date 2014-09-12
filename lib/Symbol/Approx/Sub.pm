@@ -291,7 +291,7 @@ sub import  {
     } else {
       my $mod = "Symbol::Approx::Sub::$defaults{choose}";
       require(_pkg2file($mod));
-      $CONF{choose} = \&{"4mod::choose"};
+      $CONF{choose} = \&{"${mod}::choose"};
     }
   } else {
     my $mod = "Symbol::Approx::Sub::$defaults{choose}";
