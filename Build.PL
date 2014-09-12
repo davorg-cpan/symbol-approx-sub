@@ -2,7 +2,7 @@ use Module::Build;
 
 my $build = Module::Build->new(
 	module_name        => 'Symbol::Approx::Sub',
-	dist_version       => '2.07',
+	dist_version       => '2.08',
         license            => 'perl',
         create_makefile_pl => 'traditional',
         requires           => {
