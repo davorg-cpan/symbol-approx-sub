@@ -24,3 +24,4 @@ t/str_choose.t
 t/str_xform.t
 t/pod.t
 t/pod_coverage.t
+META.json
