@@ -29,7 +29,7 @@ use warnings;
 
 our ($VERSION, @ISA, $AUTOLOAD);
 
-$VERSION = sprintf "%d", '$Revision$ ' =~ /(\d+)/;
+$VERSION = '2.07';
 
 use Carp;
 

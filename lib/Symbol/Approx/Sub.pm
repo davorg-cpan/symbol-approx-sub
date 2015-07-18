@@ -155,7 +155,7 @@ our ($VERSION, @ISA, $AUTOLOAD);
 
 use Devel::Symdump;
 
-$VERSION = sprintf "%d", '$Revision$ ' =~ /(\d+)/;
+$VERSION = '2.07';
 
 use Carp;
 

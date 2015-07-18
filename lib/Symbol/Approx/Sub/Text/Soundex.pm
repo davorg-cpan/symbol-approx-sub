@@ -29,7 +29,7 @@ use warnings;
 
 our ($VERSION, @ISA, $AUTOLOAD);
 
-$VERSION = sprintf "%2d", '$Revision$ ' =~ /(\d+)/;
+$VERSION = '2.07';
 
 use Carp;
 use Text::Soundex;
