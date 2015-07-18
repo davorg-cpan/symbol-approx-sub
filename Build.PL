@@ -16,6 +16,9 @@ my $build = Module::Build->new(
 	},
         build_requires     => {
 		Test::More          => 0,
+		String::Approx      => 0,
+		Text::Metaphone     => 0,
+		Text::Soundex       => 0,
 	},
         build_recommends   => {
 		Test::Pod           => 0,
