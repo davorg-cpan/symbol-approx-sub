@@ -10,7 +10,7 @@ sub qux  {12}
 package y;
 use Symbol::Approx::Sub (canon => undef,
 			 match => sub {shift; return 0 .. $#_});
-Test::More::ok(x()::quux()==12);
-Test::More::ok(y()::quux()==23);
+Test::More::ok(&x::quux()==12);
+Test::More::ok(&y::quux()==23);
 
 sub flurble {23}
