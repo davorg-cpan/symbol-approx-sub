@@ -1,8 +1,6 @@
 #
 # Symbol::Approx::Sub::String::Approx
 #
-# $Id$
-#
 # Matcher plugin for Symbol::Approx::Sub;
 #
 # Copyright (c) 2000, Magnum Solutions Ltd. All rights reserved.

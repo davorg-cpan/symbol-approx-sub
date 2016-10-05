@@ -1,8 +1,6 @@
 #
 # Symbol::Approx::Sub::Text::Metaphone
 #
-# $Id$
-#
 # Transformer plugin for Symbol::Approx::Sub;
 #
 # Copyright (c) 2001, Magnum Solutions Ltd. All rights reserved.
