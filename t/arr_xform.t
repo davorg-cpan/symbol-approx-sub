@@ -6,4 +6,4 @@ use Symbol::Approx::Sub (xform => [ sub { map { s/[^a-z]//ig; $_ } @_ },
 
 sub a_a { 'aa' }
 
-ok(&AA eq 'aa');
+ok(AA() eq 'aa');

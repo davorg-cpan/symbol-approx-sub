@@ -1,7 +1,7 @@
 use Test::More tests => 1;
 
 use Symbol::Approx::Sub(xform => undef,
-			match => \&always_bb);
+			match => \always_bb());
 
 sub always_bb {
   my ($sub, @subs) = @_;
@@ -17,4 +17,4 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
-ok(&a eq 'bb');
+ok(a() eq 'bb');
