@@ -20,14 +20,14 @@ Symbol::Approx::Sub uses the standard Perl module architecture and can
 therefore by installed using the standard Perl method which, in
 brief, goes something like this:
 
-'''
+```unix
    gzip -cd Symbol-Approx-Sub-X.XX.tar.gz | tar xvf -
    cd Symbol-Approx-Sub-X.XX
    perl Makefile.PL
    make
    make test
    make install
-'''
+```
 
 Where X.XX is the version number of the module which you are 
 installing.
@@ -49,9 +49,9 @@ All of the documentation is currently in POD format in the Approx.pm
 file. If you install the module using the standard method you should
 be able to read it by typing
 
-'''
+```perl
    perldoc Symbol::Approx::Sub
-'''
+```
 
 at a comand prompt.
 
