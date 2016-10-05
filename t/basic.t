@@ -8,7 +8,7 @@ sub bb { 'bb' }
 
 ok(a() eq 'aa');
 
-ok(()b eq 'bb');
+ok(b() eq 'bb');
 
-eval "()c";
+eval "&c";
 ok($@);
