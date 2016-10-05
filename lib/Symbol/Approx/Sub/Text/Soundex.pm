@@ -8,16 +8,6 @@
 # This module is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 #
-# $Log$
-# Revision 1.2  2005/10/22 17:56:22  dave
-# Added docs.
-#
-# Revision 1.1  2002/03/29 17:55:40  dave
-# Support modules
-#
-# Revision 1.1  2001/07/15 20:44:24  dave
-# Initial revision
-#
 #
 package Symbol::Approx::Sub::Text::Soundex;
 
