@@ -20,7 +20,7 @@ Symbol::Approx::Sub uses the standard Perl module architecture and can
 therefore by installed using the standard Perl method which, in
 brief, goes something like this:
 
-'''unix
+'''
    gzip -cd Symbol-Approx-Sub-X.XX.tar.gz | tar xvf -
    cd Symbol-Approx-Sub-X.XX
    perl Makefile.PL
@@ -49,7 +49,7 @@ All of the documentation is currently in POD format in the Approx.pm
 file. If you install the module using the standard method you should
 be able to read it by typing
 
-'''perl
+'''
    perldoc Symbol::Approx::Sub
 '''
 
@@ -72,7 +72,8 @@ modify it under the same terms as Perl itself.
 If you have any further questions, please contact the author.
 
 ##Authors##
-Dave Cross Email: dave@mag-sol.com
+Dave Cross 
+Email: dave@mag-sol.com
 
 
 
