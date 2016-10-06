@@ -7,4 +7,4 @@ sub a_a { 'aa' }
 
 is(aa(), 'aa');
 
-dpne_testing();
+done_testing();
