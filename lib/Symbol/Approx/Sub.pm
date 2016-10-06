@@ -11,7 +11,7 @@ Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
     # blah...
   }
 
-  &aa; # executes &a if &aa doesn't exist.
+  aa(); # executes a() if aa() doesn't exist.
 
   use Symbol::Approx::Sub (xform => 'Text::Metaphone');
   use Symbol::Approx::Sub (xform => undef,
