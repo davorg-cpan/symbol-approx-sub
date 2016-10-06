@@ -5,4 +5,4 @@ use Symbol::Approx::Sub (xform => 'Text::Soundex');
 
 sub a_a { 'aa' }
 
-ok(&aa eq 'aa');
+ok(aa() eq 'aa');

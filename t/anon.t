@@ -11,4 +11,4 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
-ok(&b eq 'aa');
+ok(b() eq 'aa');
