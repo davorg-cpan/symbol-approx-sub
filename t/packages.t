@@ -8,7 +8,7 @@ sub baar {'yep'}
 sub qux  {12}
 
 package Bar;
-use Symbol::Approx::Sub (canon => undef,
+use Symbol::Approx::Sub (xform => undef,
 			 match => sub {shift; return 0 .. $#_});
 Test::More::is(Foo::quux(), 12);
 Test::More::is(Bar::quux(), 23);
