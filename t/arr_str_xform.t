@@ -1,8 +1,10 @@
-use Test::More tests => 1;
+use Test::More;
 
 use Symbol::Approx::Sub (xform => [ 'Text::Soundex' ]);
 
 
 sub a_a { 'aa' }
 
-ok(aa() eq 'aa');
+is(aa(), 'aa');
+
+dpne_testing();
