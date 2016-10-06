@@ -1,4 +1,4 @@
-use Test::More tests => 2;
+use Test::More;
 
 use Symbol::Approx::Sub;
 
@@ -7,3 +7,5 @@ ok($@);
 
 eval { Symbol::Approx::Sub->import(xform => [{}]) };
 ok($@);
+
+done_testing;
