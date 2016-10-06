@@ -194,6 +194,10 @@ sub import  {
 		  match => 'String::Equal',
 		  choose => 'Random');
 
+  foreach (keys %param) {
+    croak "Invalid parameter $_\n" unless exists $defaults{$_};
+  }
+
   # Work out which transformer(s) to use. The valid options are:
   # 1/ $param{xform} doesn't exist. Use default transformer.
   # 2/ $param{xform} is undef. Use no transformers.
