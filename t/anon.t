@@ -11,6 +11,6 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
-is(b(), 'aa');
+is(b(), 'aa', 'b() calls aa()');
 
 done_testing();
