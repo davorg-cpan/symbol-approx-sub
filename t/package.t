@@ -1,6 +1,6 @@
 package x;
 
-use Test::More tests => 1;
+use Test::More;
 
 use Symbol::Approx::Sub (xform => undef,
 			 match => sub { my ($sub, @subs) = @_;
@@ -12,4 +12,6 @@ use Symbol::Approx::Sub (xform => undef,
 
 sub oof {'yep'};
 
-ok(foo() eq 'yep');
+is(foo(), 'yep');
+
+done_testing;
