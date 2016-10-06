@@ -12,6 +12,6 @@ use Symbol::Approx::Sub (xform => undef,
 
 sub oof {'yep'};
 
-is(foo(), 'yep');
+is(foo(), 'yep', 'foo() calls oof()');
 
 done_testing;
