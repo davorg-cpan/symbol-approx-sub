@@ -1,4 +1,4 @@
-use Test::More tests => 4;
+use Test::More;
 
 use_ok('Symbol::Approx::Sub');
 
@@ -6,9 +6,11 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
-ok(a() eq 'aa');
+is(a(), 'aa');
 
-ok(b() eq 'bb');
+is(b(), 'bb');
 
-eval "c()";
+eval { c() };
 ok($@);
+
+done_testing;
