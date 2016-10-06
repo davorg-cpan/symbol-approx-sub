@@ -1,8 +1,10 @@
-use Test::More tests => 1;
+use Test::More;
 
 use Symbol::Approx::Sub (choose => 'String::Equal');
 
 
 sub aa { 'aa' }
 
-ok(a() eq 'aa');
+is(a(), 'aa');
+
+done_testing;

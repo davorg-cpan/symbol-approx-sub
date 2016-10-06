@@ -1,16 +1,20 @@
-use Test::More tests => 3;
+use Test::More;
 
-package x;
+package Foo;
 
 use Symbol::Approx::Sub (xform => 'Text::Soundex'); 
-Test::More::ok(bar() eq 'yep');
+Test::More::is(bar(), 'yep');
 sub baar {'yep'}
 sub qux  {12}
 
-package y;
+package Bar;
 use Symbol::Approx::Sub (canon => undef,
 			 match => sub {shift; return 0 .. $#_});
-Test::More::ok(&x::quux()==12);
-Test::More::ok(&y::quux()==23);
+Test::More::is(Foo::quux(), 12);
+Test::More::is(Bar::quux(), 23);
 
 sub flurble {23}
+
+package main;
+
+done_testing;

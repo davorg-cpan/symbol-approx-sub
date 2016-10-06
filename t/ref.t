@@ -1,4 +1,4 @@
-use Test::More tests => 1;
+use Test::More;
 
 use Symbol::Approx::Sub(xform => undef,
 			match => \&always_bb);
@@ -17,4 +17,6 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
-ok(a() eq 'bb');
+is(a(), 'bb');
+
+done_testing;

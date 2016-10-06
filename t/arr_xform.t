@@ -1,4 +1,4 @@
-use Test::More tests => 1;
+use Test::More;
 
 use Symbol::Approx::Sub (xform => [ sub { map { s/[^a-z]//ig; $_ } @_ },
                                     sub { map { lc } @_ } ]);
@@ -6,4 +6,6 @@ use Symbol::Approx::Sub (xform => [ sub { map { s/[^a-z]//ig; $_ } @_ },
 
 sub a_a { 'aa' }
 
-ok(AA() eq 'aa');
+is(AA(), 'aa');
+
+done_testing;
