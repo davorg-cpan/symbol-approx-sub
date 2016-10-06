@@ -3,9 +3,9 @@ use Test::More;
 use Symbol::Approx::Sub;
 
 eval { Symbol::Approx::Sub->import(xform => {}) };
-ok($@);
+like($@, qr/^Invalid/);
 
 eval { Symbol::Approx::Sub->import(xform => [{}]) };
-ok($@);
+like($@, qr/^Invalid/);
 
 done_testing;
