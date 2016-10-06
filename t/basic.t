@@ -11,6 +11,6 @@ is(a(), 'aa');
 is(b(), 'bb');
 
 eval { c() };
-ok($@);
+like($@, qr/^REALLY/);
 
 done_testing;
