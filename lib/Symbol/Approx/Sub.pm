@@ -153,6 +153,9 @@ use warnings;
 our ($VERSION, @ISA, $AUTOLOAD);
 
 use Devel::Symdump;
+use Exception::Class (
+	'Exception'
+);
 use Module::Load;
 
 $VERSION = '2.07';
@@ -190,7 +193,7 @@ sub import  {
 		  choose => 'Random');
 
   foreach (keys %param) {
-    croak "Invalid parameter $_\n" unless exists $defaults{$_};
+    Exception->throw( error => "Invalid parameter $_\n" ) unless exists $defaults{$_};
   }
 
   # Work out which transformer(s) to use. The valid options are:
@@ -222,11 +225,11 @@ sub import  {
 	    load $mod;
 	    push @{$CONF{xform}}, \&{"${mod}::transform"};
 	  } else {
-	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
+		  Exception->throw(error => "Invalid transformer passed to Symbol::Approx::Sub");
 	  }
 	}
       } else {
-	croak 'Invalid transformer passed to Symbol::Approx::Sub';
+		  Exception->throw(error => "Invalid transformer passed to Symbol::Approx::Sub");
       }
     } else {
       $CONF{xform} = [];
@@ -255,7 +258,7 @@ sub import  {
 	load $mod;
 	$CONF{match} = \&{"${mod}::match"};
       } else {
-	croak 'Invalid matcher passed to Symbol::Approx::Sub';
+	Exception->throw(error => "Invalid matcher passed to Symbol::Approx::Sub");
       }
     } else {
       $CONF{match} = undef;
@@ -284,7 +287,7 @@ sub import  {
 	load $mod;
 	$CONF{choose} = \&{"${mod}::choose"};
       } else {
-	croak 'Invalid chooser passed to Symbol::Approx::Sub';
+	Exception->throw(error => "Invalid chooser passed to Symbol::Approx::Sub");
       }
     } else {
       my $mod = "Symbol::Approx::Sub::$defaults{choose}";
@@ -328,8 +331,7 @@ sub _make_AUTOLOAD {
 
     # Transform all of the subroutine names
     foreach (@{$CONF{xform}}) {
-      croak "Invalid transformer passed to Symbol::Approx::Sub\n"
-	unless defined &$_;
+      Exception->throw(error => "Invalid transformer passed to Symbol::Approx::Sub\n") unless defined &$_;
       @subs = $_->(@subs);
     }
 
@@ -337,8 +339,7 @@ sub _make_AUTOLOAD {
     # The matcher returns a list of the _indexes_ that match
     my @match_ind;
     if ($CONF{match}) {
-      croak "Invalid matcher passed to Symbol::Approx::Sub\n"
-	unless defined &{$CONF{match}};
+      Exception->throw(error => "Invalid matcher passed to Symbol::Approx::Sub\n") unless defined &{$CONF{match}};
       @match_ind = $CONF{match}->(@subs);
     } else {
       @match_ind = @subs[1 .. $#subs];
@@ -357,8 +358,7 @@ sub _make_AUTOLOAD {
       if (@match_ind == 1) {
         $sub = "${pkg}::" . $orig[0];
       } else {
-	croak "Invalid chooser passed to Symbol::Approx::Sub\n"
-	  unless defined $CONF{choose};
+	Exception->throw(error => "Invalid chooser passed to Symbol::Approx::Sub\n") unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
       goto &$sub;
