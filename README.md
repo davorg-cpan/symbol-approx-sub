@@ -1,6 +1,8 @@
 
 #Symbol::Approx::Sub#
 
+[![Build Status](https://travis-ci.org/davorg/symbol-approx-sub.svg?branch=master)](https://travis-ci.org/davorg/symbol-approx-sub) [![Coverage Status](https://coveralls.io/repos/github/davorg/symbol-approx-sub/badge.svg?branch=master)](https://coveralls.io/github/davorg/symbol-approx-sub?branch=master)
+
 ##What is Symbol::Approx::Sub?##
 
 Symbol::Approx::Sub is a Perl module which allows you to call subroutines
