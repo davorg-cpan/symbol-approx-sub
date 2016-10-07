@@ -153,6 +153,7 @@ use warnings;
 our ($VERSION, @ISA, $AUTOLOAD);
 
 use Devel::Symdump;
+use Module::Load;
 
 $VERSION = '2.07';
 
@@ -161,12 +162,6 @@ use Carp;
 # List of functions that we _never_ try to match approximately.
 my @_BARRED = qw(AUTOLOAD BEGIN CHECK INIT DESTROY END);
 my %_BARRED = map { $_ => 1 } @_BARRED;
-
-sub _pkg2file {
-  $_ = shift;
-  s|::|/|g;
-  "$_.pm";
-}
 
 # import is called when another script uses this module.
 # All we do here is overwrite the caller's AUTOLOAD subroutine
@@ -215,7 +210,7 @@ sub import  {
 	$CONF{xform} = [$param{xform}];
       } elsif ($type eq '') {
 	my $mod = "Symbol::Approx::Sub::$param{xform}";
-	require(_pkg2file($mod));
+	load $mod;
 	$CONF{xform} = [\&{"${mod}::transform"}];
       } elsif ($type eq 'ARRAY') {
 	foreach (@{$param{xform}}) {
@@ -224,7 +219,7 @@ sub import  {
 	    push @{$CONF{xform}}, $_;
 	  } elsif ($type eq '') {
 	    my $mod = "Symbol::Approx::Sub::$_";
-	    require(_pkg2file($mod));
+	    load $mod;
 	    push @{$CONF{xform}}, \&{"${mod}::transform"};
 	  } else {
 	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
@@ -238,7 +233,7 @@ sub import  {
     }
   } else {
     my $mod = "Symbol::Approx::Sub::$defaults{xform}";
-    require(_pkg2file($mod));
+    load $mod;
     $CONF{xform} = [\&{"${mod}::transform"}];
   }
 
@@ -257,7 +252,7 @@ sub import  {
 	$CONF{match} = $param{match};
       } elsif ($type eq '') {
 	my $mod = "Symbol::Approx::Sub::$param{match}";
-	require(_pkg2file($mod));
+	load $mod;
 	$CONF{match} = \&{"${mod}::match"};
       } else {
 	croak 'Invalid matcher passed to Symbol::Approx::Sub';
@@ -267,7 +262,7 @@ sub import  {
     }
   } else {
     my $mod = "Symbol::Approx::Sub::$defaults{match}";
-    require(_pkg2file($mod));
+    load $mod;
     $CONF{match} = \&{"${mod}::match"};
   }
 
@@ -286,19 +281,19 @@ sub import  {
 	$CONF{chooser} = $param{chooser};
       } elsif ($type eq '') {
 	my $mod = "Symbol::Approx::Sub::$param{choose}";
-	require(_pkg2file($mod));
+	load $mod;
 	$CONF{choose} = \&{"${mod}::choose"};
       } else {
 	croak 'Invalid chooser passed to Symbol::Approx::Sub';
       }
     } else {
       my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-      require(_pkg2file($mod));
+      load $mod;
       $CONF{choose} = \&{"${mod}::choose"};
     }
   } else {
     my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-    require(_pkg2file($mod));
+    load $mod;
     $CONF{choose} = \&{"${mod}::choose"};
   }
 
