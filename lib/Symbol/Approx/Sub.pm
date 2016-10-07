@@ -160,7 +160,7 @@ use Carp;
 
 # List of functions that we _never_ try to match approximately.
 my @_BARRED = qw(AUTOLOAD BEGIN CHECK INIT DESTROY END);
-my %_BARRED = (1) x @_BARRED;
+my %_BARRED = map { $_ => 1 } @_BARRED;
 
 sub _pkg2file {
   $_ = shift;
