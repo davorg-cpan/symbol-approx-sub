@@ -2,12 +2,12 @@ use Module::Build;
 
 my $build = Module::Build->new(
 	module_name        => 'Symbol::Approx::Sub',
-	dist_version       => '2.08',
         license            => 'perl',
         create_makefile_pl => 'traditional',
         requires           => {
 		Devel::Symdump      => 0,
 		Carp                => 0,
+		Module::Load        => 0,
 	},
         recommends         => {
 		String::Approx      => 0,

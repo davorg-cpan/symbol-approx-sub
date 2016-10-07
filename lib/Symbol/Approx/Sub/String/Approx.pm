@@ -42,13 +42,10 @@ L<String::Approx>.
 
 sub match {
   my ($sub, @subs) = @_;
-  my (@ret);
 
-  foreach (0 .. $#subs) {
-    push @ret, $_ if amatch($sub, $subs[$_]);
-  }
+  my @ret = grep { amatch($sub, $subs[$_]) } 0 .. $#subs;
 
-  @ret;
+  return @ret;
 }
 
 1;

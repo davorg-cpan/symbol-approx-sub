@@ -40,13 +40,10 @@ which equal (by string comparison) the initial value.
 
 sub match {
   my ($sub, @subs) = @_;
-  my (@ret);
 
-  foreach (0 .. $#subs) {
-    push @ret, $_ if $sub eq $subs[$_];
-  }
+  my @ret = grep { $sub eq $subs[$_] } 0 .. $#subs;
 
-  @ret;
+  return @ret;
 }
 
 1;
