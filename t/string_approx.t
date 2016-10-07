@@ -1,6 +1,6 @@
 use Test::More;
 
-use_ok('Symbol::Approx::Sub' (match => 'String::Approx'));
+use_ok('Symbol::Approx::Sub', match => 'String::Approx');
 
 sub aa { 'aa' }
 
