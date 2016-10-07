@@ -6,6 +6,9 @@ sub aa { 'aa' }
 
 sub bb { 'bb' }
 
+TODO: {
+  local $TODO = "NOTHING WORKS!!";
+
 is(a(), 'aa', 'a() calls aa()');
 
 is(b(), 'bb', 'b() calls bb()');
@@ -13,5 +16,6 @@ is(b(), 'bb', 'b() calls bb()');
 eval { c() };
 ok($@, 'Exception thrown');
 like($@, qr/^REALLY/, 'Correct exception thrown');
+};
 
 done_testing;
