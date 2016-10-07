@@ -11,6 +11,6 @@ is(a(), 'aa', 'a() calls aa()');
 is(b(), 'bb', 'b() calls bb()');
 
 eval { c() };
-like($@, qr/^REALLY/);
+like($@, qr/^REALLY/, 'Correct exception thrown');
 
 done_testing;
