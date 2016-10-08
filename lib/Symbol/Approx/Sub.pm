@@ -195,114 +195,133 @@ sub import  {
     croak "Invalid parameter $_\n" unless exists $defaults{$_};
   }
 
-  # Work out which transformer(s) to use. The valid options are:
-  # 1/ $param{xform} doesn't exist. Use default transformer.
-  # 2/ $param{xform} is undef. Use no transformers.
-  # 3/ $param{xform} is a reference to a subroutine. Use the
-  #    referenced subroutine as the transformer.
-  # 4/ $param{xform} is a scalar. This is the name of a transformer
-  #    module which should be loaded.
-  # 5/ $param{xform} is a reference to an array. Each element of the
-  #    array is one of the previous two options.
-
-  if (exists $param{xform}) {
-    if (defined $param{xform}) {
-      my $type = ref $param{xform};
-      if ($type eq 'CODE') {
-        $CONF{xform} = [$param{xform}];
-      } elsif ($type eq '') {
-        my $mod = "Symbol::Approx::Sub::$param{xform}";
-        load $mod;
-        $CONF{xform} = [\&{"${mod}::transform"}];
-      } elsif ($type eq 'ARRAY') {
-        foreach (@{$param{xform}}) {
-          my $type = ref $_;
-          if ($type eq 'CODE') {
-            push @{$CONF{xform}}, $_;
-          } elsif ($type eq '') {
-            my $mod = "Symbol::Approx::Sub::$_";
-            load $mod;
-            push @{$CONF{xform}}, \&{"${mod}::transform"};
-          } else {
-            croak 'Invalid transformer passed to Symbol::Approx::Sub';
-          }
-        }
-      } else {
-        croak 'Invalid transformer passed to Symbol::Approx::Sub';
-      }
-    } else {
-      $CONF{xform} = [];
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{xform}";
-    load $mod;
-    $CONF{xform} = [\&{"${mod}::transform"}];
-  }
-
-  # Work out which matcher to use. The valid options are:
-  # 1/ $param{match} doesn't exist. Use default matcher.
-  # 2/ $param{match} is undef. Use no matcher.
-  # 3/ $param{match} is a reference to a subroutine. Use the
-  #    referenced subroutine as the matcher.
-  # 4/ $param{match} is a scalar. This is the name of a matcher
-  #    module which should be loaded.
-
-  if (exists $param{match}) {
-    if (defined $param{match}) {
-      my $type = ref $param{match};
-      if ($type eq 'CODE') {
-        $CONF{match} = $param{match};
-      } elsif ($type eq '') {
-        my $mod = "Symbol::Approx::Sub::$param{match}";
-        load $mod;
-        $CONF{match} = \&{"${mod}::match"};
-      } else {
-        croak 'Invalid matcher passed to Symbol::Approx::Sub';
-      }
-    } else {
-      $CONF{match} = undef;
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{match}";
-    load $mod;
-    $CONF{match} = \&{"${mod}::match"};
-  }
-
-  # Work out which chooser to use. The valid options are:
-  # 1/ $param{choose} doesn't exist. Use default chooser.
-  # 2/ $param{choose} is undef. Use default chooser.
-  # 3/ $param{choose} is a reference to a subroutine. Use the
-  #    referenced subroutine as the chooser.
-  # 4/ $param{choose} is a scalar. This is the name of a chooser
-  #    module which should be loaded.
-
-  if (exists $param{choose}) {
-    if (defined $param{choose}) {
-      my $type = ref $param{choose};
-      if ($type eq 'CODE') {
-        $CONF{chooser} = $param{chooser};
-      } elsif ($type eq '') {
-        my $mod = "Symbol::Approx::Sub::$param{choose}";
-        load $mod;
-        $CONF{choose} = \&{"${mod}::choose"};
-      } else {
-        croak 'Invalid chooser passed to Symbol::Approx::Sub';
-      }
-    } else {
-      my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-      load $mod;
-      $CONF{choose} = \&{"${mod}::choose"};
-    }
-  } else {
-    my $mod = "Symbol::Approx::Sub::$defaults{choose}";
-    load $mod;
-    $CONF{choose} = \&{"${mod}::choose"};
-  }
+  _set_transformer(\%param, \%CONF, $defaults{xform});
+  _set_matcher(\%param, \%CONF, $defaults{match});
+  _set_chooser(\%param, \%CONF, $defaults{choose});
 
   # Now install appropriate AUTOLOAD routine in caller's package
 
   my $pkg =  caller(0);
   *{"${pkg}::AUTOLOAD"} = _make_AUTOLOAD(%CONF);
+}
+
+# Work out which transformer(s) to use. The valid options are:
+# 1/ $param{xform} doesn't exist. Use default transformer.
+# 2/ $param{xform} is undef. Use no transformers.
+# 3/ $param{xform} is a reference to a subroutine. Use the
+#    referenced subroutine as the transformer.
+# 4/ $param{xform} is a scalar. This is the name of a transformer
+#    module which should be loaded.
+# 5/ $param{xform} is a reference to an array. Each element of the
+#    array is one of the previous two options.
+sub _set_transformer {
+  my ($param, $CONF, $default) = @_;
+
+  unless (exists $param->{xform}) {
+    my $mod = "Symbol::Approx::Sub::$default";
+    load $mod;
+    $CONF->{xform} = [\&{"${mod}::transform"}];
+    return;
+  }
+
+  unless (defined $param->{xform}) {
+    $CONF->{xform} = [];
+    return;
+  }
+
+  my $type = ref $param->{xform};
+  if ($type eq 'CODE') {
+    $CONF->{xform} = [$param->{xform}];
+  } elsif ($type eq '') {
+    my $mod = "Symbol::Approx::Sub::$param->{xform}";
+    load $mod;
+    $CONF->{xform} = [\&{"${mod}::transform"}];
+  } elsif ($type eq 'ARRAY') {
+    foreach (@{$param->{xform}}) {
+      my $type = ref $_;
+      if ($type eq 'CODE') {
+        push @{$CONF->{xform}}, $_;
+      } elsif ($type eq '') {
+        my $mod = "Symbol::Approx::Sub::$_";
+        load $mod;
+        push @{$CONF->{xform}}, \&{"${mod}::transform"};
+      } else {
+        croak 'Invalid transformer passed to Symbol::Approx::Sub';
+      }
+    }
+  } else {
+    croak 'Invalid transformer passed to Symbol::Approx::Sub';
+  }
+}
+
+# Work out which matcher to use. The valid options are:
+# 1/ $param{match} doesn't exist. Use default matcher.
+# 2/ $param{match} is undef. Use no matcher.
+# 3/ $param{match} is a reference to a subroutine. Use the
+#    referenced subroutine as the matcher.
+# 4/ $param{match} is a scalar. This is the name of a matcher
+#    module which should be loaded.
+sub _set_matcher {
+  my ($param, $CONF, $default) = @_;
+
+  unless (exists $param->{match}) {
+    my $mod = "Symbol::Approx::Sub::$default";
+    load $mod;
+    $CONF->{match} = \&{"${mod}::match"};
+    return;
+  }
+
+  unless (defined $param->{match}) {
+    $CONF->{match} = undef;
+    return;
+  }
+
+  my $type = ref $param->{match};
+  if ($type eq 'CODE') {
+    $CONF->{match} = $param->{match};
+  } elsif ($type eq '') {
+    my $mod = "Symbol::Approx::Sub::$param->{match}";
+    load $mod;
+    $CONF->{match} = \&{"${mod}::match"};
+  } else {
+    croak 'Invalid matcher passed to Symbol::Approx::Sub';
+  }
+}
+
+# Work out which chooser to use. The valid options are:
+# 1/ $param{choose} doesn't exist. Use default chooser.
+# 2/ $param{choose} is undef. Use default chooser.
+# 3/ $param{choose} is a reference to a subroutine. Use the
+#    referenced subroutine as the chooser.
+# 4/ $param{choose} is a scalar. This is the name of a chooser
+#    module which should be loaded.
+sub _set_chooser {
+  my ($param, $CONF, $default) = @_;
+
+  unless (exists $param->{choose}) {
+    my $mod = "Symbol::Approx::Sub::$default";
+    load $mod;
+    $CONF->{choose} = \&{"${mod}::choose"};
+    return;
+  }
+
+  unless (defined $param->{choose}) {
+    my $mod = "Symbol::Approx::Sub::$default";
+    load $mod;
+    $CONF->{choose} = \&{"${mod}::choose"};
+    return;
+  }
+
+  my $type = ref $param->{choose};
+  if ($type eq 'CODE') {
+    $CONF->{chooser} = $param->{chooser};
+  } elsif ($type eq '') {
+    my $mod = "Symbol::Approx::Sub::$param->{choose}";
+    load $mod;
+    $CONF->{choose} = \&{"${mod}::choose"};
+  } else {
+    croak 'Invalid chooser passed to Symbol::Approx::Sub';
+  }
 }
 
 # Create a subroutine which is called when a given subroutine
