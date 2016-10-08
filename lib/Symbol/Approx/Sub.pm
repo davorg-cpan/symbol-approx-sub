@@ -15,13 +15,13 @@ Symbol::Approx::Sub - Perl module for calling subroutines by approximate names!
 
   use Symbol::Approx::Sub (xform => 'Text::Metaphone');
   use Symbol::Approx::Sub (xform => undef,
-			   match => 'String::Approx');
+                           match => 'String::Approx');
   use Symbol::Approx::Sub (xform => 'Text::Soundex');
   use Symbol::Approx::Sub (xform => \&my_transform);
   use Symbol::Approx::Sub (xform => [\&my_transform, 'Text::Soundex']);
   use Symbol::Approx::Sub (xform => \&my_transform,
-			   match => \&my_matcher,
-			   choose => \&my_chooser);
+                           match => \&my_matcher,
+                           choose => \&my_chooser);
 
 
 =head1 DESCRIPTION
@@ -62,7 +62,7 @@ There are three phases to the matching process. They are:
 
 B<transform> - a transform subroutine applies some kind of transformation
 to the subroutine names. For example the default transformer applies the
-Soundex algorithm to each of the subroutine names. Other obvious 
+Soundex algorithm to each of the subroutine names. Other obvious
 tranformations would be to remove all the underscores or to change the
 names to lower case.
 
@@ -86,7 +86,7 @@ default matcher simply checks to see if the strings are equal.
 
 A match subroutine is passed the target string as its first parameter,
 followed by the list of potential matches. For each string that matches,
-the matcher should return the index number from the input list. For example, 
+the matcher should return the index number from the input list. For example,
 the default matcher is implemented like this:
 
   sub matcher {
@@ -106,7 +106,7 @@ B<choose> - a chooser subroutine takes a list of matches and chooses exactly
 one item from the list. The default matcher chooses one item at random.
 
 A chooser subroutine is passed a list of matches and must simply return one
-index number from that list. For example, the default chooser is implemented 
+index number from that list. For example, the default chooser is implemented
 like this:
 
   sub chooser {
@@ -117,7 +117,7 @@ like this:
 
 You can override any of these behaviours by writing your own transformer,
 matcher or chooser. You can either define the subroutine in your own
-script or you can put the subroutine in a separate module which 
+script or you can put the subroutine in a separate module which
 Symbol::Approx::Sub can then use as a I<plug-in>. See below for more details
 on plug-ins.
 
@@ -185,9 +185,11 @@ sub import  {
   my %CONF;
   %param = @_ if @_;
 
-  my %defaults = (xform => 'Text::Soundex',
-		  match => 'String::Equal',
-		  choose => 'Random');
+  my %defaults = (
+    xform  => 'Text::Soundex',
+    match  => 'String::Equal',
+    choose => 'Random'
+  );
 
   foreach (keys %param) {
     croak "Invalid parameter $_\n" unless exists $defaults{$_};
@@ -196,7 +198,7 @@ sub import  {
   # Work out which transformer(s) to use. The valid options are:
   # 1/ $param{xform} doesn't exist. Use default transformer.
   # 2/ $param{xform} is undef. Use no transformers.
-  # 3/ $param{xform} is a reference to a subroutine. Use the 
+  # 3/ $param{xform} is a reference to a subroutine. Use the
   #    referenced subroutine as the transformer.
   # 4/ $param{xform} is a scalar. This is the name of a transformer
   #    module which should be loaded.
@@ -207,26 +209,26 @@ sub import  {
     if (defined $param{xform}) {
       my $type = ref $param{xform};
       if ($type eq 'CODE') {
-	$CONF{xform} = [$param{xform}];
+        $CONF{xform} = [$param{xform}];
       } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{xform}";
-	load $mod;
-	$CONF{xform} = [\&{"${mod}::transform"}];
+        my $mod = "Symbol::Approx::Sub::$param{xform}";
+        load $mod;
+        $CONF{xform} = [\&{"${mod}::transform"}];
       } elsif ($type eq 'ARRAY') {
-	foreach (@{$param{xform}}) {
-	  my $type = ref $_;
-	  if ($type eq 'CODE') {
-	    push @{$CONF{xform}}, $_;
-	  } elsif ($type eq '') {
-	    my $mod = "Symbol::Approx::Sub::$_";
-	    load $mod;
-	    push @{$CONF{xform}}, \&{"${mod}::transform"};
-	  } else {
-	    croak 'Invalid transformer passed to Symbol::Approx::Sub';
-	  }
-	}
+        foreach (@{$param{xform}}) {
+          my $type = ref $_;
+          if ($type eq 'CODE') {
+            push @{$CONF{xform}}, $_;
+          } elsif ($type eq '') {
+            my $mod = "Symbol::Approx::Sub::$_";
+            load $mod;
+            push @{$CONF{xform}}, \&{"${mod}::transform"};
+          } else {
+            croak 'Invalid transformer passed to Symbol::Approx::Sub';
+          }
+        }
       } else {
-	croak 'Invalid transformer passed to Symbol::Approx::Sub';
+        croak 'Invalid transformer passed to Symbol::Approx::Sub';
       }
     } else {
       $CONF{xform} = [];
@@ -240,7 +242,7 @@ sub import  {
   # Work out which matcher to use. The valid options are:
   # 1/ $param{match} doesn't exist. Use default matcher.
   # 2/ $param{match} is undef. Use no matcher.
-  # 3/ $param{match} is a reference to a subroutine. Use the 
+  # 3/ $param{match} is a reference to a subroutine. Use the
   #    referenced subroutine as the matcher.
   # 4/ $param{match} is a scalar. This is the name of a matcher
   #    module which should be loaded.
@@ -249,13 +251,13 @@ sub import  {
     if (defined $param{match}) {
       my $type = ref $param{match};
       if ($type eq 'CODE') {
-	$CONF{match} = $param{match};
+        $CONF{match} = $param{match};
       } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{match}";
-	load $mod;
-	$CONF{match} = \&{"${mod}::match"};
+        my $mod = "Symbol::Approx::Sub::$param{match}";
+        load $mod;
+        $CONF{match} = \&{"${mod}::match"};
       } else {
-	croak 'Invalid matcher passed to Symbol::Approx::Sub';
+        croak 'Invalid matcher passed to Symbol::Approx::Sub';
       }
     } else {
       $CONF{match} = undef;
@@ -269,7 +271,7 @@ sub import  {
   # Work out which chooser to use. The valid options are:
   # 1/ $param{choose} doesn't exist. Use default chooser.
   # 2/ $param{choose} is undef. Use default chooser.
-  # 3/ $param{choose} is a reference to a subroutine. Use the 
+  # 3/ $param{choose} is a reference to a subroutine. Use the
   #    referenced subroutine as the chooser.
   # 4/ $param{choose} is a scalar. This is the name of a chooser
   #    module which should be loaded.
@@ -278,13 +280,13 @@ sub import  {
     if (defined $param{choose}) {
       my $type = ref $param{choose};
       if ($type eq 'CODE') {
-	$CONF{chooser} = $param{chooser};
+        $CONF{chooser} = $param{chooser};
       } elsif ($type eq '') {
-	my $mod = "Symbol::Approx::Sub::$param{choose}";
-	load $mod;
-	$CONF{choose} = \&{"${mod}::choose"};
+        my $mod = "Symbol::Approx::Sub::$param{choose}";
+        load $mod;
+        $CONF{choose} = \&{"${mod}::choose"};
       } else {
-	croak 'Invalid chooser passed to Symbol::Approx::Sub';
+        croak 'Invalid chooser passed to Symbol::Approx::Sub';
       }
     } else {
       my $mod = "Symbol::Approx::Sub::$defaults{choose}";
@@ -320,7 +322,7 @@ sub _make_AUTOLOAD {
     # in the %_BARRED hash
     my (@subs, @orig);
     my $sym = Devel::Symdump->new($pkg);
-    @orig = @subs = grep { ! $_BARRED{$_} } 
+    @orig = @subs = grep { ! $_BARRED{$_} }
                     map { s/${pkg}:://; $_ }
                     grep { defined &{$_} } $sym->functions($pkg);
 
@@ -329,7 +331,7 @@ sub _make_AUTOLOAD {
     # Transform all of the subroutine names
     foreach (@{$CONF{xform}}) {
       croak "Invalid transformer passed to Symbol::Approx::Sub\n"
-	unless defined &$_;
+        unless defined &$_;
       @subs = $_->(@subs);
     }
 
@@ -338,7 +340,7 @@ sub _make_AUTOLOAD {
     my @match_ind;
     if ($CONF{match}) {
       croak "Invalid matcher passed to Symbol::Approx::Sub\n"
-	unless defined &{$CONF{match}};
+        unless defined &{$CONF{match}};
       @match_ind = $CONF{match}->(@subs);
     } else {
       @match_ind = @subs[1 .. $#subs];
@@ -357,8 +359,8 @@ sub _make_AUTOLOAD {
       if (@match_ind == 1) {
         $sub = "${pkg}::" . $orig[0];
       } else {
-	croak "Invalid chooser passed to Symbol::Approx::Sub\n"
-	  unless defined $CONF{choose};
+        croak "Invalid chooser passed to Symbol::Approx::Sub\n"
+          unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
       goto &$sub;
@@ -373,8 +375,8 @@ __END__
 
 =head1 CAVEAT
 
-I can't stress too strongly that this will make your code completely 
-unmaintainable and you really shouldn't use this module unless you're 
+I can't stress too strongly that this will make your code completely
+unmaintainable and you really shouldn't use this module unless you're
 doing something very stupid.
 
 =head1 ACKNOWLEDGEMENTS
@@ -404,7 +406,7 @@ With lots of help from Leon Brocard <leon@astray.com>
 Copyright (C) 2000-2008, Magnum Solutions Ltd.  All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself. 
+under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
