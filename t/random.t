@@ -1,7 +1,7 @@
 use Test::More;
 
 use Symbol::Approx::Sub
-  xform  => sub { return @_ },
+  xform  => undef,
   choose => 'Random',
   match  => \&match_sas;
 
