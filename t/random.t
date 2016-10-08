@@ -1,8 +1,8 @@
 use Test::More;
 
 use Symbol::Approx::Sub
-  xform  => undef,
-  choose => 'Random',
+  xform  => undef, # undef - use no transformer
+  choose => undef, # undef - use default chooser
   match  => \&match_sas;
 
 sub sas_1 { 'sas1' }
