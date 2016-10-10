@@ -154,6 +154,13 @@ our ($VERSION, @ISA, $AUTOLOAD);
 
 use Devel::Symdump;
 use Module::Load;
+use Exception::Class (
+  'SAS::Exception',
+  'SAS::Exception::InvalidOption'              => { isa => 'SAS::Exception' },
+  'SAS::Exception::InvalidOption::Transformer' => { isa => 'SAS::Exception::InvalidOption' },
+  'SAS::Exception::InvalidOption::Matcher'     => { isa => 'SAS::Exception::InvalidOption' },
+  'SAS::Exception::InvalidOption::Chooser'     => { isa => 'SAS::Exception::InvalidOption' },
+);
 
 $VERSION = '2.07';
 
@@ -246,11 +253,15 @@ sub _set_transformer {
         load $mod;
         push @{$CONF->{xform}}, \&{"${mod}::transform"};
       } else {
-        croak 'Invalid transformer passed to Symbol::Approx::Sub';
+        SAS::Exception::InvalidOption::Transformer->throw(
+          error => 'Invalid transformer passed to Symbol::Approx::Sub'
+        );
       }
     }
   } else {
-    croak 'Invalid transformer passed to Symbol::Approx::Sub';
+    SAS::Exception::InvalidOption::Transformer->throw(
+      error => 'Invalid transformer passed to Symbol::Approx::Sub'
+    );
   }
 }
 
@@ -284,7 +295,9 @@ sub _set_matcher {
     load $mod;
     $CONF->{match} = \&{"${mod}::match"};
   } else {
-    croak 'Invalid matcher passed to Symbol::Approx::Sub';
+    SAS::Exception::InvalidOption::Matcher->throw(
+      error => 'Invalid matcher passed to Symbol::Approx::Sub'
+    );
   }
 }
 
@@ -320,7 +333,9 @@ sub _set_chooser {
     load $mod;
     $CONF->{choose} = \&{"${mod}::choose"};
   } else {
-    croak 'Invalid chooser passed to Symbol::Approx::Sub';
+    SAS::Exception::InvalidOption::Chooser->throw(
+      error => 'Invalid chooser passed to Symbol::Approx::Sub',
+    );
   }
 }
 
@@ -349,8 +364,9 @@ sub _make_AUTOLOAD {
 
     # Transform all of the subroutine names
     foreach (@{$CONF{xform}}) {
-      croak "Invalid transformer passed to Symbol::Approx::Sub\n"
-        unless defined &$_;
+      SAS::Exception::InvalidOption::Transformer->throw(
+        error => 'Invalid transformer passed to Symbol::Approx::Sub',
+      ) unless defined &$_;
       @subs = $_->(@subs);
     }
 
@@ -358,8 +374,9 @@ sub _make_AUTOLOAD {
     # The matcher returns a list of the _indexes_ that match
     my @match_ind;
     if ($CONF{match}) {
-      croak "Invalid matcher passed to Symbol::Approx::Sub\n"
-        unless defined &{$CONF{match}};
+      SAS::Exception::InvalidOption::Matcher->throw(
+        error => 'Invalid matcher passed to Symbol::Approx::Sub',
+      ) unless defined &{$CONF{match}};
       @match_ind = $CONF{match}->(@subs);
     } else {
       @match_ind = @subs[1 .. $#subs];
@@ -378,8 +395,9 @@ sub _make_AUTOLOAD {
       if (@match_ind == 1) {
         $sub = "${pkg}::" . $orig[0];
       } else {
-        croak "Invalid chooser passed to Symbol::Approx::Sub\n"
-          unless defined $CONF{choose};
+        SAS::Exception::InvalidOption::Chooser->throw(
+          error => 'Invalid chooser passed to Symbol::Approx::Sub'
+        ) unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
       goto &$sub;
