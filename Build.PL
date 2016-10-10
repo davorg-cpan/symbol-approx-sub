@@ -8,6 +8,7 @@ my $build = Module::Build->new(
 		Devel::Symdump      => 0,
 		Carp                => 0,
 		Module::Load        => 0,
+		Exception::Class    => 0,
 	},
         recommends         => {
 		String::Approx      => 0,
