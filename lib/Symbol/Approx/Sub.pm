@@ -160,6 +160,7 @@ use Exception::Class (
   'SAS::Exception::InvalidOption::Transformer' => { isa => 'SAS::Exception::InvalidOption' },
   'SAS::Exception::InvalidOption::Matcher'     => { isa => 'SAS::Exception::InvalidOption' },
   'SAS::Exception::InvalidOption::Chooser'     => { isa => 'SAS::Exception::InvalidOption' },
+  'SAS::Exception::InvalidParameter'           => { isa => 'SAS::Exception' },
 );
 
 $VERSION = '2.07';
@@ -199,7 +200,9 @@ sub import  {
   );
 
   foreach (keys %param) {
-    croak "Invalid parameter $_\n" unless exists $defaults{$_};
+    SAS::Exception::InvalidParameter->throw(
+      error => "Invalid parameter $_\n",
+    ) unless exists $defaults{$_};
   }
 
   _set_transformer(\%param, \%CONF, $defaults{xform});
