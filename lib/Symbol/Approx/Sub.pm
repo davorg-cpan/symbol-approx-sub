@@ -361,7 +361,7 @@ sub _make_AUTOLOAD {
     my $sym = Devel::Symdump->new($pkg);
     @orig = @subs = grep { ! $_BARRED{$_} }
                     map { s/${pkg}:://; $_ }
-                    grep { defined &{$_} } $sym->functions($pkg);
+                    grep { defined &{$_} } $sym->functions();
 
     unshift @subs, $sub;
 
