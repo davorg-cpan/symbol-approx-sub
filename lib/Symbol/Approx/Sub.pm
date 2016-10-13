@@ -330,7 +330,7 @@ sub _set_chooser {
 
   my $type = ref $param->{choose};
   if ($type eq 'CODE') {
-    $CONF->{chooser} = $param->{chooser};
+    $CONF->{choose} = $param->{choose};
   } elsif ($type eq '') {
     my $mod = "Symbol::Approx::Sub::$param->{choose}";
     load $mod;
