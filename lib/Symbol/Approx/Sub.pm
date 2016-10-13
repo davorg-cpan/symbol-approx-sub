@@ -382,7 +382,7 @@ sub _make_AUTOLOAD {
       ) unless defined &{$CONF{match}};
       @match_ind = $CONF{match}->(@subs);
     } else {
-      @match_ind = @subs[1 .. $#subs];
+      @match_ind = (0 .. $#subs - 1);
     }
 
     shift @subs;
