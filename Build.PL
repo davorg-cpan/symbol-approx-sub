@@ -17,6 +17,7 @@ my $build = Module::Build->new(
 	},
         build_requires     => {
 		Test::More          => 0,
+		Test::Exception     => 0,
 		String::Approx      => 0,
 		Text::Metaphone     => 0,
 		Text::Soundex       => 0,

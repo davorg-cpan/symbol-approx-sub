@@ -1,52 +1,36 @@
 use Test::More;
+use Test::Exception;
 
 require Symbol::Approx::Sub;
 
 note('Hashref transformer');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(xform => {});
-};
-
-ok($@, 'Got an exception');
-like($@, qr/^Invalid transformer/, 'Got the right exception');
+} qr/^Invalid transformer/, 'Got the right exception';
 
 note('Hashref transformer in an arrayref');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(xform => [{}]);
-};
-
-ok($@, 'Got an exception');
-like($@, qr/^Invalid transformer/, 'Got the right exception');
+} qr/^Invalid transformer/, 'Got the right exception';
 
 note('Hashref matcher');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(match => {});
-};
-
-ok($@, 'Got an exception');
-like($@, qr/^Invalid matcher/, 'Got the right exception');
+} qr/^Invalid matcher/, 'Got the right exception';
 
 note('Arrayref matcher');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(match => []);
-};
-
-ok($@, 'Got an exception');
-like($@, qr/^Invalid matcher/, 'Got the right exception');
+} qr/^Invalid matcher/, 'Got the right exception';
 
 note('Hashref chooser');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(choose => {});
-};
-
-ok($@, 'Got an exception');
-like($@, qr/^Invalid chooser/, 'Got the right exception');
+} qr/^Invalid chooser/, 'Got the right exception';
 
 note('Arrayref chooser');
-eval {
+throws_ok {
   Symbol::Approx::Sub->import(choose => []);
-};
+} qr/^Invalid chooser/, 'Got the right exception';
 
-ok($@, 'Got an exception');
-like($@, qr/^Invalid chooser/, 'Got the right exception');
 done_testing;
