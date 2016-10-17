@@ -363,14 +363,12 @@ sub _make_AUTOLOAD {
                     map { s/${pkg}:://; $_ }
                     grep { defined &{$_} } $sym->functions();
 
-    unshift @subs, $sub;
-
     # Transform all of the subroutine names
     foreach (@{$CONF{xform}}) {
       SAS::Exception::InvalidOption::Transformer->throw(
         error => 'Invalid transformer passed to Symbol::Approx::Sub',
       ) unless defined &$_;
-      @subs = $_->(@subs);
+      ($sub, @subs) = $_->($sub, @subs);
     }
 
     # Call the subroutine that will look for matches
@@ -380,12 +378,10 @@ sub _make_AUTOLOAD {
       SAS::Exception::InvalidOption::Matcher->throw(
         error => 'Invalid matcher passed to Symbol::Approx::Sub',
       ) unless defined &{$CONF{match}};
-      @match_ind = $CONF{match}->(@subs);
+      @match_ind = $CONF{match}->($sub, @subs);
     } else {
-      @match_ind = (0 .. $#subs - 1);
+      @match_ind = (0 .. $#subs);
     }
-
-    shift @subs;
 
     @subs = @subs[@match_ind];
     @orig = @orig[@match_ind];
