@@ -1,4 +1,5 @@
 use Test::More;
+use Test::Exception;
 
 use_ok('Symbol::Approx::Sub');
 
@@ -10,7 +11,6 @@ is(a(), 'aa', 'a() calls aa()');
 
 is(b(), 'bb', 'b() calls bb()');
 
-eval { c() };
-like($@, qr/^REALLY/, 'Correct exception thrown');
+throws_ok { c() } qr/^REALLY/, 'Correct exception thrown';
 
 done_testing;
