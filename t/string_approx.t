@@ -11,6 +11,6 @@ is(a(), 'aa', 'a() calls aa()');
 
 is(test_it(), 'test', 'test_it() calls test()');
 
-thorws_ok { zzz_not_there() } qr/^REALLY/, 'Correct exception thrown';
+throws_ok { zzz_not_there() } qr/^REALLY/, 'Correct exception thrown';
 
 done_testing;
