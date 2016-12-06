@@ -1,4 +1,4 @@
-## Unreleased
+## 3.0.0 - 2016-12-06
 
 * Various code improvements
 * Obscure bug fixes
