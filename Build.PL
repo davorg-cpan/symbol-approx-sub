@@ -15,6 +15,9 @@ my $build = Module::Build->new(
 		Text::Metaphone     => 0,
 		Text::Soundex       => 0,
 	},
+        configure_requires => {
+                Module::Build       => 0,
+        },
         build_requires     => {
 		Test::More          => 0,
 		Test::Exception     => 0,
