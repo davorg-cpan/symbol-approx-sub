@@ -1,6 +1,4 @@
-.travis.yml
 Build.PL
-Changes
 COPYING
 lib/Symbol/Approx/Sub.pm
 lib/Symbol/Approx/Sub/Random.pm
@@ -8,18 +6,13 @@ lib/Symbol/Approx/Sub/String/Approx.pm
 lib/Symbol/Approx/Sub/String/Equal.pm
 lib/Symbol/Approx/Sub/Text/Metaphone.pm
 lib/Symbol/Approx/Sub/Text/Soundex.pm
-Makefile.PL
-MANIFEST
-META.json
-META.yml			Module meta-data (added by MakeMaker)
-README
+MANIFEST			This list of files
 README.md
 t/anon.t
 t/arr_str_xform.t
 t/arr_xform.t
 t/basic.t
 t/code_xform.t
-t/hash_xform.t
 t/invalid.t
 t/package.t
 t/packages.t
