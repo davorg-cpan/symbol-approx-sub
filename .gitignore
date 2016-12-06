@@ -11,4 +11,4 @@ Symbol-Approx-Sub/
 _build/
 blib/
 cover_db/
-
+*.bak
