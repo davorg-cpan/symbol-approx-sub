@@ -29,6 +29,16 @@ my $build = Module::Build->new(
 		Test::Pod           => 0,
 		Test::Pod::Coverage => 0,
 	},
+        meta_merge => {
+               'meta-spec' => { version => 2 },
+                resources  => {
+                        repository => {
+                                type => 'git',
+                                url  => 'https://github.com/davorg/symbol-approx-sub.git',
+                                web  => 'https://github.com/davorg/symbol-approx-sub',
+                        },
+                },
+        },
 );
 
 $build->create_build_script;
