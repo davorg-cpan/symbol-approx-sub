@@ -1,3 +1,9 @@
+## 3.0.1 - 2016-12-07
+
+* Added repo information to Build.PL
+* Made module version numbers consistant
+* Declare required Perl version in Build.PL
+
 ## 3.0.0 - 2016-12-06
 
 * Various code improvements
