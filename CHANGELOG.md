@@ -1,3 +1,7 @@
+## 3.0.2 - 2016-12-07
+
+* Really made module versions consistant :-/
+
 ## 3.0.1 - 2016-12-07
 
 * Added repo information to Build.PL
