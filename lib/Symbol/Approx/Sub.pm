@@ -163,7 +163,7 @@ use Exception::Class (
   'SAS::Exception::InvalidParameter'           => { isa => 'SAS::Exception' },
 );
 
-$VERSION = '3.0.0';
+$VERSION = '3.0.1';
 
 use Carp;
 

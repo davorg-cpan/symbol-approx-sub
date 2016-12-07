@@ -17,7 +17,7 @@ use strict;
 
 our ($VERSION, @ISA, $AUTOLOAD);
 
-$VERSION = '2.07';
+$VERSION = '3.0.0';
 
 use Carp;
 use String::Approx 'amatch';
