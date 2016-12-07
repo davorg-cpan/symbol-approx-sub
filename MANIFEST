@@ -24,6 +24,9 @@ t/str_choose.t
 t/str_xform.t
 t/string_approx.t
 t/text_metaphone.t
+t/choose_sub.t
+t/match_undef.t
 Makefile.PL
 META.yml
 META.json
+CHANGELOG.md
