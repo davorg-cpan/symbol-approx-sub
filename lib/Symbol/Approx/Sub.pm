@@ -194,9 +194,10 @@ sub import  {
   %param = @_ if @_;
 
   my %defaults = (
-    xform  => 'Text::Soundex',
-    match  => 'String::Equal',
-    choose => 'Random'
+    xform   => 'Text::Soundex',
+    match   => 'String::Equal',
+    choose  => 'Random',
+    suggest => 0,
   );
 
   foreach (keys %param) {
@@ -208,6 +209,8 @@ sub import  {
   _set_transformer(\%param, \%CONF, $defaults{xform});
   _set_matcher(\%param, \%CONF, $defaults{match});
   _set_chooser(\%param, \%CONF, $defaults{choose});
+
+  $CONF{suggest} = $param{suggest} // $defaults{suggest};
 
   # Now install appropriate AUTOLOAD routine in caller's package
 
@@ -399,7 +402,11 @@ sub _make_AUTOLOAD {
         ) unless defined $CONF{choose};
         $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
       }
-      goto &$sub;
+      if ($CONF{suggest}) {
+        croak "Cannot find subroutine $AUTOLOAD. Did you mean $sub?";
+      } else {
+        goto &$sub;
+      }
     } else {
       die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
     }
