@@ -303,10 +303,10 @@ sub _set_transformer {
     $CONF->{xform} = [\&{"${mod}::transform"}];
   } elsif ($type eq 'ARRAY') {
     foreach (@{$param->{xform}}) {
-      my $type = ref $_;
-      if ($type eq 'CODE') {
+      my $subtype = ref $_;
+      if ($subtype eq 'CODE') {
         push @{$CONF->{xform}}, $_;
-      } elsif ($type eq '') {
+      } elsif ($subtype eq '') {
         my $mod = "Symbol::Approx::Sub::$_";
         load $mod;
         push @{$CONF->{xform}}, \&{"${mod}::transform"};
