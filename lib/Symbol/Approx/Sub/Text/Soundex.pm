@@ -17,7 +17,7 @@ use warnings;
 
 our ($VERSION, @ISA, $AUTOLOAD);
 
-$VERSION = '3.1.1';
+$VERSION = '3.1.2';
 
 use Carp;
 use Text::Soundex;
