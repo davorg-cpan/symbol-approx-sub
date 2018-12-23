@@ -258,9 +258,9 @@ sub import  {
     ) unless exists $defaults{$_};
   }
 
-  _set_transformer(\%param, \%CONF, $defaults{xform});
-  _set_matcher(\%param, \%CONF, $defaults{match});
-  _set_chooser(\%param, \%CONF, $defaults{choose});
+  $CONF{xform}   = _set_transformer(\%param, $defaults{xform});
+  $CONF{match}   = _set_matcher(\%param, $defaults{match});
+  $CONF{choose}  =_set_chooser(\%param, $defaults{choose});
 
   $CONF{suggest} = $param{suggest} // $defaults{suggest};
 
@@ -280,42 +280,42 @@ sub import  {
 # 5/ $param{xform} is a reference to an array. Each element of the
 #    array is one of the previous two options.
 sub _set_transformer {
-  my ($param, $CONF, $default) = @_;
+  my ($param, $default) = @_;
 
   unless (exists $param->{xform}) {
     my $mod = "Symbol::Approx::Sub::$default";
     load $mod;
-    $CONF->{xform} = [\&{"${mod}::transform"}];
-    return;
+    return [\&{"${mod}::transform"}];
   }
 
   unless (defined $param->{xform}) {
-    $CONF->{xform} = [];
-    return;
+    return [];
   }
 
   my $type = ref $param->{xform};
   if ($type eq 'CODE') {
-    $CONF->{xform} = [$param->{xform}];
+    return [$param->{xform}];
   } elsif ($type eq '') {
     my $mod = "Symbol::Approx::Sub::$param->{xform}";
     load $mod;
-    $CONF->{xform} = [\&{"${mod}::transform"}];
+    return [\&{"${mod}::transform"}];
   } elsif ($type eq 'ARRAY') {
+    my @xforms;
     foreach (@{$param->{xform}}) {
       my $subtype = ref $_;
       if ($subtype eq 'CODE') {
-        push @{$CONF->{xform}}, $_;
+        push @xforms, $_;
       } elsif ($subtype eq '') {
         my $mod = "Symbol::Approx::Sub::$_";
         load $mod;
-        push @{$CONF->{xform}}, \&{"${mod}::transform"};
+        push @xforms, \&{"${mod}::transform"};
       } else {
         SAS::Exception::InvalidOption::Transformer->throw(
           error => 'Invalid transformer passed to Symbol::Approx::Sub'
         );
       }
     }
+    return \@xforms;
   } else {
     SAS::Exception::InvalidOption::Transformer->throw(
       error => 'Invalid transformer passed to Symbol::Approx::Sub'
@@ -331,27 +331,25 @@ sub _set_transformer {
 # 4/ $param{match} is a scalar. This is the name of a matcher
 #    module which should be loaded.
 sub _set_matcher {
-  my ($param, $CONF, $default) = @_;
+  my ($param, $default) = @_;
 
   unless (exists $param->{match}) {
     my $mod = "Symbol::Approx::Sub::$default";
     load $mod;
-    $CONF->{match} = \&{"${mod}::match"};
-    return;
+    return \&{"${mod}::match"};
   }
 
   unless (defined $param->{match}) {
-    $CONF->{match} = undef;
-    return;
+    return undef;
   }
 
   my $type = ref $param->{match};
   if ($type eq 'CODE') {
-    $CONF->{match} = $param->{match};
+    return $param->{match};
   } elsif ($type eq '') {
     my $mod = "Symbol::Approx::Sub::$param->{match}";
     load $mod;
-    $CONF->{match} = \&{"${mod}::match"};
+    return \&{"${mod}::match"};
   } else {
     SAS::Exception::InvalidOption::Matcher->throw(
       error => 'Invalid matcher passed to Symbol::Approx::Sub'
@@ -367,29 +365,27 @@ sub _set_matcher {
 # 4/ $param{choose} is a scalar. This is the name of a chooser
 #    module which should be loaded.
 sub _set_chooser {
-  my ($param, $CONF, $default) = @_;
+  my ($param, $default) = @_;
 
   unless (exists $param->{choose}) {
     my $mod = "Symbol::Approx::Sub::$default";
     load $mod;
-    $CONF->{choose} = \&{"${mod}::choose"};
-    return;
+    return \&{"${mod}::choose"};
   }
 
   unless (defined $param->{choose}) {
     my $mod = "Symbol::Approx::Sub::$default";
     load $mod;
-    $CONF->{choose} = \&{"${mod}::choose"};
-    return;
+    return \&{"${mod}::choose"};
   }
 
   my $type = ref $param->{choose};
   if ($type eq 'CODE') {
-    $CONF->{choose} = $param->{choose};
+    return $param->{choose};
   } elsif ($type eq '') {
     my $mod = "Symbol::Approx::Sub::$param->{choose}";
     load $mod;
-    $CONF->{choose} = \&{"${mod}::choose"};
+    return \&{"${mod}::choose"};
   } else {
     SAS::Exception::InvalidOption::Chooser->throw(
       error => 'Invalid chooser passed to Symbol::Approx::Sub',
