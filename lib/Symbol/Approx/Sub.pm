@@ -393,6 +393,46 @@ sub _set_chooser {
   }
 }
 
+sub _run_xformers {
+  my ($xforms, $sub, @subs) = @_;
+
+  foreach (@$xforms) {
+    SAS::Exception::InvalidOption::Transformer->throw(
+      error => 'Invalid transformer passed to Symbol::Approx::Sub',
+    ) unless defined &$_;
+    ($sub, @subs) = $_->($sub, @subs);
+  }
+
+  return ($sub, @subs);
+}
+
+sub _run_matcher {
+  my ($matcher, $sub, @subs) = @_;
+
+  my @match_ind;
+  if ($matcher) {
+    SAS::Exception::InvalidOption::Matcher->throw(
+      error => 'Invalid matcher passed to Symbol::Approx::Sub',
+    ) unless defined &{$matcher};
+    @match_ind = $matcher->($sub, @subs);
+  } else {
+    @match_ind = (0 .. $#subs);
+  }
+
+  return @match_ind;
+}
+
+sub _run_chooser {
+  my ($chooser, @subs) = @_;
+
+  SAS::Exception::InvalidOption::Chooser->throw(
+    error => 'Invalid chooser passed to Symbol::Approx::Sub'
+  ) unless defined &$chooser;
+  my $index = $chooser->(@subs);
+
+  return $index;
+}
+
 # Create a subroutine which is called when a given subroutine
 # name can't be found in the current package. In the import subroutine
 # above, we have already arranged that our calling package will use
@@ -415,24 +455,11 @@ sub _make_AUTOLOAD {
                     grep { defined &{$_} } $sym->functions();
 
     # Transform all of the subroutine names
-    foreach (@{$CONF{xform}}) {
-      SAS::Exception::InvalidOption::Transformer->throw(
-        error => 'Invalid transformer passed to Symbol::Approx::Sub',
-      ) unless defined &$_;
-      ($sub, @subs) = $_->($sub, @subs);
-    }
+    ($sub, @subs) = _run_xformers($CONF{xform}, $sub, @subs);
 
     # Call the subroutine that will look for matches
     # The matcher returns a list of the _indexes_ that match
-    my @match_ind;
-    if ($CONF{match}) {
-      SAS::Exception::InvalidOption::Matcher->throw(
-        error => 'Invalid matcher passed to Symbol::Approx::Sub',
-      ) unless defined &{$CONF{match}};
-      @match_ind = $CONF{match}->($sub, @subs);
-    } else {
-      @match_ind = (0 .. $#subs);
-    }
+    my @match_ind = _run_matcher($CONF{match}, $sub, @subs);
 
     @subs = @subs[@match_ind];
     @orig = @orig[@match_ind];
@@ -441,22 +468,20 @@ sub _make_AUTOLOAD {
     # chooser to pick one.
     # Call the matched subroutine using magic goto.
     # If no match was found, die recreating Perl's usual behaviour.
-    if (@match_ind) {
-      if (@match_ind == 1) {
-        $sub = "${pkg}::" . $orig[0];
-      } else {
-        SAS::Exception::InvalidOption::Chooser->throw(
-          error => 'Invalid chooser passed to Symbol::Approx::Sub'
-        ) unless defined $CONF{choose};
-        $sub = "${pkg}::" . $orig[$CONF{choose}->(@subs)];
-      }
-      if ($CONF{suggest}) {
-        croak "Cannot find subroutine $AUTOLOAD. Did you mean $sub?";
-      } else {
-        goto &$sub;
-      }
+
+    die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n"
+      unless @match_ind;
+
+    if (@match_ind == 1) {
+      $sub = "${pkg}::" . $orig[0];
     } else {
-      die "REALLY Undefined subroutine $AUTOLOAD called at $c[1] line $c[2]\n";
+      my $index = _run_chooser($CONF{choose}, @subs);
+      $sub = "${pkg}::" . $orig[$index];
+    }
+    if ($CONF{suggest}) {
+      croak "Cannot find subroutine $AUTOLOAD. Did you mean $sub?";
+    } else {
+      goto &$sub;
     }
   }
 }
