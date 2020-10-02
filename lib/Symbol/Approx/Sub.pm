@@ -39,7 +39,7 @@ To use it, simply include the line:
   use Symbol::Approx::Sub;
 
 somewhere in your program. Then, each time you call a subroutine that doesn't
-exist in the the current package, Perl will search for a subroutine with
+exist in the current package, Perl will search for a subroutine with
 approximately the same name. The meaning of 'approximately the same' is
 configurable. The default is to find subroutines with the same Soundex
 value (as defined by Text::Soundex) as the missing subroutine. There are
