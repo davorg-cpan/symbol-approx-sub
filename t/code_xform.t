@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use Symbol::Approx::Sub (xform => sub { map { s/[^A-Za-z]//g; $_ } @_ });
+use Symbol::Approx::Sub (xform => sub { map { s/[^A-Za-z]//rg } @_ });
 
 sub a_a { 'aa' }
 
