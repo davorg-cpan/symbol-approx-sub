@@ -198,7 +198,7 @@ Thanks to Alex Balhatchet for suggesting it.
 
 package Symbol::Approx::Sub;
 
-require 5.010_000;
+require 5.014_000;
 use strict;
 use warnings;
 
@@ -451,7 +451,7 @@ sub _make_AUTOLOAD {
     my (@subs, @orig);
     my $sym = Devel::Symdump->new($pkg);
     @orig = @subs = grep { ! $_BARRED{$_} }
-                    map { s/${pkg}:://; $_ }
+                    map { s/${pkg}:://r }
                     grep { defined &{$_} } $sym->functions();
 
     # Transform all of the subroutine names
