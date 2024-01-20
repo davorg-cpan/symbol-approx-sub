@@ -16,3 +16,6 @@ jobs:
 
   perlcritic:
     uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-perlcritic.yml@main
+
+  complexity:
+    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-complexity.yml@main
