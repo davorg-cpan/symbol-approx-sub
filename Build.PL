@@ -35,11 +35,11 @@ my $build = Module::Build->new(
     resources  => {
       repository => {
         type => 'git',
-        url  => 'https://github.com/davorg/symbol-approx-sub.git',
-        web  => 'https://github.com/davorg/symbol-approx-sub',
+        url  => 'https://github.com/davorg-cpan/symbol-approx-sub.git',
+        web  => 'https://github.com/davorg-cpan/symbol-approx-sub',
       },
       bugtracker => {
-        web  => 'https://github.com/davorg/symbol-approx-sub/issues',
+        web  => 'https://github.com/davorg-cpan/symbol-approx-sub/issues',
       },
     },
   },
